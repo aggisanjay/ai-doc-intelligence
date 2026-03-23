@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.env
+venv/
+.venv/
+uploads/
+vector_stores/
+
+# Node
+node_modules/
+.next/
+.env.local
+dist/
+
+# Docker
+*.log
+
+# IDE
+.vscode/
+.idea/
