@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  hashedPassword String   @map("hashed_password")
+  fullName       String?  @map("full_name")
+  role           String   @default("user")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  documents     Document[]
+  conversations Conversation[]
+
+  @@map("users")
+}
+
+model Document {
+  id               String    @id @default(uuid())
+  filename         String
+  originalFilename String    @map("original_filename")
+  fileType         String    @map("file_type")
+  fileSize         Int       @map("file_size")
+  filePath         String    @map("file_path")
+  status           String    @default("pending")
+  chunkCount       Int       @default(0) @map("chunk_count")
+  pageCount        Int       @default(0) @map("page_count")
+  errorMessage     String?   @map("error_message")
+  ownerId          String    @map("owner_id")
+  owner            User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt        DateTime  @default(now()) @map("created_at")
+  processedAt      DateTime? @map("processed_at")
+
+  conversations Conversation[]
+
+  @@map("documents")
+}
+
+model Conversation {
+  id          String    @id @default(uuid())
+  title       String    @default("New Conversation")
+  messages    String    @default("[]")        // was: Json
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentId  String?   @map("document_id")
+  document    Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  documentIds String    @default("[]") @map("document_ids")   // was: Json
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("conversations")
+}

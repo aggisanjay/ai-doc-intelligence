@@ -90,6 +90,7 @@ export const chatAPI = {
 
   listConversations: () => api.get("/chat/conversations"),
   getConversation: (id: string) => api.get(`/chat/conversations/${id}`),
+  deleteConversation: (id: string) => api.delete(`/chat/conversations/${id}`),
 };
 
 export default api;

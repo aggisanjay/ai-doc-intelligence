@@ -1,0 +1,8 @@
+node_modules/
+.env
+.env.local
+.env.production
+uploads/
+vector_stores/
+*.db
+prisma/migrations/

@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { ChatMessage } from "@/types";
 import { User, Bot, ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface SourceCitationProps {
   source: { document_name: string; page_number: number | null; chunk_text: string; relevance_score: number };
@@ -56,10 +58,33 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
       </div>
       <div className={cn("max-w-[80%] space-y-2", isUser ? "items-end" : "items-start")}>
-        <div className={cn("rounded-2xl px-4 py-3 text-sm leading-relaxed", isUser ? "bg-blue-600 text-white rounded-tr-sm" : "bg-gray-800 text-gray-200 rounded-tl-sm")}>
-          {message.content.split("\n").map((line, i) => (
-            <React.Fragment key={i}>{line}{i < message.content.split("\n").length - 1 && <br />}</React.Fragment>
-          ))}
+        <div className={cn("rounded-2xl px-4 py-3 text-sm leading-relaxed prose prose-invert max-w-none", isUser ? "bg-blue-600 text-white rounded-tr-sm" : "bg-gray-800 text-gray-200 rounded-tl-sm")}>
+          {isUser ? (
+            message.content
+          ) : (
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              components={{
+                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
+                li: ({ children }) => <li className="mb-1">{children}</li>,
+                h3: ({ children }) => <h3 className="text-lg font-bold mb-2 mt-4 text-blue-400">{children}</h3>,
+                table: ({ children }) => (
+                  <div className="overflow-x-auto my-4">
+                    <table className="min-w-full border border-gray-700 divide-y divide-gray-700">
+                      {children}
+                    </table>
+                  </div>
+                ),
+                th: ({ children }) => <th className="px-3 py-2 bg-gray-700 text-left text-xs font-medium uppercase tracking-wider">{children}</th>,
+                td: ({ children }) => <td className="px-3 py-2 text-sm border-t border-gray-700">{children}</td>,
+                code: ({ children }) => <code className="bg-gray-900 px-1 rounded text-pink-400">{children}</code>,
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
+          )}
         </div>
         {!isUser && message.sources && message.sources.length > 0 && (
           <div className="w-full">

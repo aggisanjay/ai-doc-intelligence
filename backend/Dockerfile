@@ -1,19 +1,36 @@
-FROM python:3.11-slim as builder
+# ── Build stage ────────────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /var/lib/apt/lists/*
-COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-FROM python:3.11-slim
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+COPY prisma ./prisma
+RUN npx prisma generate
+
+# ── Runtime stage ───────────────────────────────────────────────────────────────
+FROM node:20-alpine
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libglib2.0-0 libsm6 libxext6 libxrender-dev && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /install /usr/local
-COPY . .
-RUN mkdir -p uploads vector_stores
-RUN adduser --disabled-password --gecos "" appuser && chown -R appuser:appuser /app
+
+RUN apk add --no-cache dumb-init
+
+# Non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY src ./src
+COPY package.json ./
+
+RUN mkdir -p uploads vector_stores && chown -R appuser:appgroup /app
+
 USER appuser
+
 EXPOSE 8000
+
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+  CMD node -e "require('http').get('http://localhost:8000/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"
+
+# dumb-init handles signals properly; runs DB migration then starts server
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node src/app.js"]

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Upload, MessageSquare, FileText, Plus, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Upload, MessageSquare, FileText, Plus, ChevronRight, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { chatAPI } from "@/lib/api";
 import { Conversation } from "@/types";
@@ -20,6 +20,22 @@ export function Sidebar() {
   useEffect(() => {
     chatAPI.listConversations().then((res) => setConversations(res.data.slice(0, 10))).catch(() => {});
   }, [pathname]);
+
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this conversation?")) return;
+
+    try {
+      await chatAPI.deleteConversation(id);
+      setConversations(conversations.filter(c => c.id !== id));
+      if (pathname === `/chat/${id}`) {
+        window.location.href = "/chat/new";
+      }
+    } catch (err) {
+      console.error("Failed to delete conversation", err);
+    }
+  };
 
   return (
     <div className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col">
@@ -67,8 +83,14 @@ export function Sidebar() {
             )}
           >
             <MessageSquare className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{conv.title}</span>
-            <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 shrink-0" />
+            <span className="truncate flex-1">{conv.title}</span>
+            <button
+              onClick={(e) => handleDelete(e, conv.id)}
+              className="p-1 rounded hover:bg-gray-700 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+            <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-100 shrink-0" />
           </Link>
         ))}
         {conversations.length === 0 && (
