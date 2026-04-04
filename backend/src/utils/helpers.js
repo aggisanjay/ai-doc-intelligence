@@ -19,6 +19,12 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function httpError(message, status = 400) {
+  const err = new Error(message);
+  err.status = status;
+  return err;
+}
+
 async function moveFile(src, dest) {
   try {
     await fs.promises.rename(src, dest);
