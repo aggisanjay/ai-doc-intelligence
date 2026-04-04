@@ -3,8 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  
 }
 
 model User {
@@ -47,12 +49,12 @@ model Document {
 model Conversation {
   id          String    @id @default(uuid())
   title       String    @default("New Conversation")
-  messages    String    @default("[]")        // was: Json
+  messages    Json      @default("[]")
   userId      String    @map("user_id")
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   documentId  String?   @map("document_id")
   document    Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
-  documentIds String    @default("[]") @map("document_ids")   // was: Json
+  documentIds Json      @default("[]") @map("document_ids")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 

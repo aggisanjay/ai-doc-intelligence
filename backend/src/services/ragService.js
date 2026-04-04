@@ -7,17 +7,16 @@ const { httpError } = require('../utils/helpers');
 
 const prisma = new PrismaClient();
 
-// ── SQLite stores JSON fields as strings — parse on read, stringify on write ──
-
+// ── PostgreSQL handles JSON natively ──
 function parseConv(conv) {
   if (!conv) return null;
   return {
     ...conv,
-    messages:    typeof conv.messages    === 'string' ? JSON.parse(conv.messages)    : (conv.messages    || []),
-    document_ids: typeof conv.documentIds === 'string' ? JSON.parse(conv.documentIds) : (conv.documentIds || []),
-    document_id: conv.documentId || null,
-    created_at:  conv.createdAt,
-    updated_at:  conv.updatedAt,
+    messages:     conv.messages || [],
+    document_ids: conv.documentIds || [],
+    document_id:  conv.documentId || null,
+    created_at:   conv.createdAt,
+    updated_at:   conv.updatedAt,
   };
 }
 
@@ -45,7 +44,7 @@ async function saveToConversation({ request, answer, sources, user, conversation
     const messages = [...(conversation.messages || []), userMsg, assistantMsg];
     const updated = await prisma.conversation.update({
       where: { id: conversation.id },
-      data:  { messages: JSON.stringify(messages), updatedAt: new Date() },
+      data:  { messages, updatedAt: new Date() },
     });
     return updated.id;
   }
@@ -55,10 +54,10 @@ async function saveToConversation({ request, answer, sources, user, conversation
   const created = await prisma.conversation.create({
     data: {
       title,
-      messages:    JSON.stringify([userMsg, assistantMsg]),
+      messages:    [userMsg, assistantMsg],
       userId:      user.id,
       documentId:  docIds.length === 1 ? docIds[0] : null,
-      documentIds: JSON.stringify(docIds),
+      documentIds: docIds,
     },
   });
   return created.id;
