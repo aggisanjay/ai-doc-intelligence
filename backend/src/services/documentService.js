@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { PrismaClient } = require('@prisma/client');
-const { httpError } = require('../utils/helpers');
+const { httpError, moveFile } = require('../utils/helpers');
 const textExtractor = require('../rag/textExtractor');
 const chunker = require('../rag/chunker');
 const vectorStore = require('../rag/vectorStore');
@@ -46,7 +46,7 @@ async function uploadDocument(file, user) {
   const userUploadDir = path.join(path.resolve(config.uploadDir), user.id);
   fs.mkdirSync(userUploadDir, { recursive: true });
   const finalPath = path.join(userUploadDir, uniqueFilename);
-  fs.renameSync(file.path, finalPath);
+  await moveFile(file.path, finalPath);
 
   const document = await prisma.document.create({
     data: {

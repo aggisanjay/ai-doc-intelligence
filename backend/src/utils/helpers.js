@@ -19,10 +19,17 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function httpError(message, status = 400) {
-  const err = new Error(message);
-  err.status = status;
-  return err;
+async function moveFile(src, dest) {
+  try {
+    await fs.promises.rename(src, dest);
+  } catch (err) {
+    if (err.code === 'EXDEV') {
+      await fs.promises.copyFile(src, dest);
+      await fs.promises.unlink(src);
+    } else {
+      throw err;
+    }
+  }
 }
 
-module.exports = { generateUniqueFilename, ensureDir, formatFileSize, httpError };
+module.exports = { generateUniqueFilename, ensureDir, formatFileSize, httpError, moveFile };
