@@ -3,6 +3,7 @@
 A production-ready, full-stack RAG (Retrieval-Augmented Generation) application for intelligent document Q&A. Upload PDFs and Word documents, then ask questions and get AI-powered answers with source citations.
 
 🔗 **Live Demo:** [ai-doc-intelligence-ruddy.vercel.app](https://ai-doc-intelligence-ruddy.vercel.app)
+
 💻 **GitHub:** [github.com/aggisanjay/ai-doc-intelligence](https://github.com/aggisanjay/ai-doc-intelligence)
 
 ---
