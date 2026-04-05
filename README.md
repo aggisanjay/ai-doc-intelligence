@@ -31,7 +31,7 @@ A production-ready, full-stack RAG (Retrieval-Augmented Generation) application 
 │              └────────────────────────────────────────┘  │
 │                                                          │
 │  ┌─────────────┐  ┌─────────────────────────────────┐   │
-│  │  PostgreSQL  │  │      Gemini 2.0 Flash (LLM)     │   │
+│  │  PostgreSQL  │  │      Gemini 3.0 Flash (LLM)     │   │
 │  │   (Prisma)   │  │                                 │   │
 │  └─────────────┘  └─────────────────────────────────┘   │
 └──────────────────────────────────────────────────────────┘
@@ -212,7 +212,7 @@ Upload
 Query
   └─▶ vectorStore.search  cosine similarity
         └─▶ retriever      score ≥ 0.3 · dedup · context-window trim
-              └─▶ llmService     Gemini 2.0 Flash
+              └─▶ llmService     Gemini 3.0 Flash
                     └─▶ ragService    persist to Conversation
 ```
 
