@@ -50,4 +50,29 @@ async function login({ email, password }) {
   };
 }
 
-module.exports = { register, login, formatUser };
+async function clerkSync({ email, fullName }) {
+  let user = await prisma.user.findUnique({ where: { email } });
+  
+  if (!user) {
+    const { v4: uuidv4 } = require('uuid');
+    const randomPassword = uuidv4();
+    user = await prisma.user.create({
+      data: {
+        email,
+        hashedPassword: hashPassword(randomPassword),
+        fullName: fullName || null,
+        role: 'user',
+      },
+    });
+  } else if (!user.isActive) {
+    throw httpError('Account is deactivated', 403);
+  }
+
+  return {
+    access_token: createAccessToken(user.id, user.role),
+    token_type: 'bearer',
+    user: formatUser(user),
+  };
+}
+
+module.exports = { register, login, clerkSync, formatUser };

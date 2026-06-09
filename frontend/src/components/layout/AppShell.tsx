@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
+import { useUser } from "@clerk/nextjs";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { FileText } from "lucide-react";
@@ -10,11 +11,23 @@ import { FileText } from "lucide-react";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, loadFromStorage } = useAuthStore();
+  const { isSignedIn, isLoaded } = useUser();
 
   useEffect(() => { 
     loadFromStorage(); 
   }, [loadFromStorage]);
 
+  // Sync Clerk sign-out state with local store and redirect to login
+  useEffect(() => {
+    if (isLoaded) {
+      if (!isSignedIn) {
+        useAuthStore.getState().logout();
+        router.push("/login");
+      }
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  // Fallback route protection if local token is lost
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (!useAuthStore.getState().isAuthenticated) router.push("/login");
@@ -22,7 +35,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timeout);
   }, [router]);
 
-  if (!isAuthenticated) {
+  if (!isLoaded || !isAuthenticated || !isSignedIn) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#0A0A0F] text-white">
         <div className="relative flex items-center justify-center mb-4">

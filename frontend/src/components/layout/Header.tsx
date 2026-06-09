@@ -21,7 +21,7 @@ export function Header() {
 
   return (
     <header className="h-16 border-b border-white/5 bg-[#0A0A0F]/65 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-40 relative">
-      
+
       {/* Search Bar - Commander View */}
       <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/[0.02] border border-white/5 hover:border-white/10 rounded-xl w-64 md:w-80 transition-all cursor-pointer">
         <Search className="h-4 w-4 text-white/35" />
@@ -33,10 +33,10 @@ export function Header() {
 
       {/* Right Side Actions */}
       <div className="flex items-center gap-4">
-        
+
         {/* Notification Bell */}
         <div className="relative">
-          <button 
+          <button
             onClick={() => { setShowNotifications(!showNotifications); setOpen(false); }}
             className="p-2 text-white/50 hover:text-white hover:bg-white/[0.03] rounded-xl transition-all relative"
           >

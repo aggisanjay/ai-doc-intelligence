@@ -35,6 +35,8 @@ export const authAPI = {
   register: (data: { email: string; password: string; full_name?: string }) =>
     api.post("/auth/register", data),
   login: (data: { email: string; password: string }) => api.post("/auth/login", data),
+  clerkSync: (data: { email: string; full_name?: string }) =>
+    api.post("/auth/clerk-sync", data),
   getMe: () => api.get("/auth/me"),
 };
 

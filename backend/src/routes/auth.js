@@ -25,6 +25,16 @@ router.post('/login', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/v1/auth/clerk-sync
+router.post('/clerk-sync', async (req, res, next) => {
+  try {
+    const { email, full_name: fullName } = req.body;
+    if (!email) return res.status(400).json({ detail: 'email is required' });
+    const result = await authService.clerkSync({ email, fullName });
+    res.json(result);
+  } catch (err) { next(err); }
+});
+
 // GET /api/v1/auth/me
 router.get('/me', authenticate, (req, res) => {
   res.json(authService.formatUser(req.user));

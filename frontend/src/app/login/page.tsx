@@ -1,27 +1,74 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { SignIn, SignUp, useUser } from "@clerk/nextjs";
 import { 
-  FileText, Loader2, Mail, Lock, User, Eye, EyeOff, 
-  CheckCircle2, ShieldCheck, Cpu, Database, Award, ArrowRight
+  FileText, Loader2, CheckCircle2, Cpu, Database, AlertTriangle, RefreshCw, Sparkles
 } from "lucide-react";
 
 export default function LoginPage() {
-  const { login, register } = useAuth();
-  const [tab, setTab] = useState<"login" | "register">("login");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
+  const { user: clerkUser, isSignedIn, isLoaded } = useUser();
+  const { clerkSync, logout } = useAuth();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const syncAttempted = useRef(false);
+  const [authMode, setAuthMode] = useState<"options" | "signin" | "signup">("options");
 
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  
-  const [regEmail, setRegEmail] = useState("");
-  const [regPassword, setRegPassword] = useState("");
-  const [regName, setRegName] = useState("");
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const params = new URLSearchParams(window.location.search);
+      const mode = params.get("mode");
+      if (mode === "signup") {
+        setAuthMode("signup");
+      } else if (mode === "signin") {
+        setAuthMode("signin");
+      } else {
+        setAuthMode("options");
+      }
+    };
+
+    handleUrlChange();
+    window.addEventListener("popstate", handleUrlChange);
+    const interval = setInterval(handleUrlChange, 200);
+
+    return () => {
+      window.removeEventListener("popstate", handleUrlChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Sync Clerk session with local backend
+  useEffect(() => {
+    if (isLoaded && isSignedIn && clerkUser && !syncAttempted.current && !syncError) {
+      const email = clerkUser.primaryEmailAddress?.emailAddress;
+      const fullName = clerkUser.fullName || clerkUser.username || "";
+      if (email && !isSyncing) {
+        syncAttempted.current = true;
+        setIsSyncing(true);
+        clerkSync(email, fullName)
+          .catch((err) => {
+            console.error("Clerk sync failed:", err);
+            setIsSyncing(false);
+            setSyncError(err.message || "Failed to sync user with workspace.");
+            syncAttempted.current = false;
+          });
+      }
+    }
+  }, [isLoaded, isSignedIn, clerkUser, clerkSync, isSyncing, syncError]);
+
+  const handleRetrySync = () => {
+    setSyncError(null);
+    setIsSyncing(false);
+    syncAttempted.current = false;
+  };
+
+  const handleSignOut = async () => {
+    await logout();
+    setSyncError(null);
+    setIsSyncing(false);
+    syncAttempted.current = false;
+  };
 
   // Rotating features list
   const features = [
@@ -39,37 +86,6 @@ export default function LoginPage() {
     }, 4500);
     return () => clearInterval(timer);
   }, []);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    try {
-      await login(loginEmail, loginPassword);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "Login failed. Please check your credentials.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    setSuccessMsg(null);
-    try {
-      await register(regEmail, regPassword, regName);
-      setSuccessMsg("Account created successfully! Logging you in...");
-      setTimeout(() => {
-        login(regEmail, regPassword);
-      }, 1000);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "Registration failed. Try a different email.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white flex flex-col md:flex-row font-sans overflow-hidden">
@@ -153,7 +169,6 @@ export default function LoginPage() {
 
         {/* Quotes, trust index & metrics */}
         <div className="z-10 space-y-8">
-
           {/* Trust Badges */}
           <div className="pt-6 border-t border-white/5 grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-3 rounded-xl bg-white/[0.01] border border-white/5 flex flex-col gap-1.5 hover:bg-white/[0.02] transition-colors">
@@ -176,14 +191,13 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* RIGHT SECTION - 40% Login Form */}
+      {/* RIGHT SECTION - 40% Clerk Login Card */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-12 lg:p-16 relative bg-[#0A0A0F]">
         
         {/* Glow circle for mobile bg */}
-        <div className="md:hidden absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-500/10 blur-[80px] pointer-events-none" />
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-500/10 blur-[80px] pointer-events-none" />
 
-        <div className="w-full max-w-[420px] z-10 space-y-8">
-          
+        <div className="w-full max-w-[400px] z-10 flex flex-col items-center">
           {/* Mobile Logo */}
           <div className="flex md:hidden items-center gap-2 mb-6">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center">
@@ -192,208 +206,185 @@ export default function LoginPage() {
             <span className="text-lg font-bold">DocAI</span>
           </div>
 
-          <div className="space-y-2">
-            <h2 className="text-3xl font-extrabold tracking-tight">
-              {tab === "login" ? "Welcome back" : "Create account"}
-            </h2>
-            <p className="text-sm text-white/50">
-              {tab === "login" ? "Enter your workspace details to proceed" : "Get started with your developer account in minutes"}
-            </p>
-          </div>
+          {syncError ? (
+            <div className="flex flex-col items-center justify-center p-8 bg-[#171F2E] border border-white/5 shadow-2xl rounded-2xl w-full text-center space-y-5 min-h-[340px] relative overflow-hidden">
+              {/* Alert Glow */}
+              <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] rounded-full bg-rose-500/10 blur-[60px] pointer-events-none" />
+              
+              <div className="p-3 bg-rose-500/10 text-rose-400 rounded-2xl border border-rose-500/20">
+                <AlertTriangle className="h-8 w-8" />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-white">Workspace Sync Failed</h3>
+                <p className="text-xs text-white/50 leading-relaxed max-w-[280px]">
+                  Unable to connect your credentials with the workspace database. Make sure the backend server is running and accessible.
+                </p>
+              </div>
 
-          {/* Login / Register tab switcher */}
-          <div className="bg-white/[0.03] border border-white/5 p-1 rounded-xl flex">
-            <button
-              onClick={() => { setTab("login"); setError(null); }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
-                tab === "login" ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/70"
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => { setTab("register"); setError(null); }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
-                tab === "register" ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/70"
-              }`}
-            >
-              Register
-            </button>
-          </div>
-
-          {/* Feedback states */}
-          {error && (
-            <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl flex items-start gap-2.5">
-              <div className="w-4 h-4 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0 mt-0.5 text-rose-400 font-bold">!</div>
-              <p>{error}</p>
+              <div className="w-full flex flex-col gap-2 pt-2">
+                <button
+                  onClick={handleRetrySync}
+                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm py-2.5 shadow-lg shadow-indigo-600/15 transition-all duration-150 active:scale-[0.98]"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Retry Connection
+                </button>
+                
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center justify-center gap-2 bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] text-white/70 hover:text-white font-medium rounded-xl text-xs py-2 transition-all"
+                >
+                  Sign Out
+                </button>
+              </div>
             </div>
-          )}
-
-          {successMsg && (
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl flex items-start gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <p>{successMsg}</p>
+          ) : !isLoaded || isSyncing || (isLoaded && isSignedIn) ? (
+            <div className="flex flex-col items-center justify-center p-8 bg-[#171F2E] border border-white/5 shadow-2xl rounded-2xl w-full text-center space-y-4 min-h-[340px]">
+              <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
+              <h3 className="text-lg font-semibold text-white">
+                {isSyncing || (isLoaded && isSignedIn) ? "Syncing Workspace Account" : "Loading Workspace"}
+              </h3>
+              <p className="text-xs text-white/40 leading-relaxed max-w-[280px]">
+                {isSyncing || (isLoaded && isSignedIn) 
+                  ? "Configuring session credentials and loading your workspace environment..."
+                  : "Connecting to secure authentication services..."}
+              </p>
             </div>
-          )}
-
-          {/* Forms */}
-          {tab === "login" ? (
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold tracking-wider text-white/50 uppercase">Email address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-                  <input
-                    type="email"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="you@company.com"
-                    required
-                    disabled={isLoading}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white/[0.02] border border-white/10 rounded-xl text-sm placeholder:text-white/20 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.04] transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold tracking-wider text-white/50 uppercase">Password</label>
-                  <a href="#" className="text-xs text-indigo-400 hover:text-indigo-300 font-medium">Forgot?</a>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    disabled={isLoading}
-                    className="w-full pl-10 pr-10 py-2.5 bg-white/[0.02] border border-white/10 rounded-xl text-sm placeholder:text-white/20 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.04] transition-all"
-                  />
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPassword(!showPassword)} 
-                    disabled={isLoading}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/50 transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  disabled={isLoading}
-                  className="h-4 w-4 rounded border-white/10 bg-white/[0.02] text-indigo-600 focus:ring-indigo-500 focus:ring-offset-[#0A0A0F] focus:ring-offset-2"
-                />
-                <label htmlFor="remember-me" className="ml-2 text-xs text-white/50 cursor-pointer select-none">
-                  Keep me signed in on this device
-                </label>
-              </div>
-
+          ) : authMode === "signup" ? (
+            <div className="w-full flex flex-col items-center">
+              <SignUp 
+                routing="hash"
+                signInUrl="/login?mode=signin"
+                appearance={{
+                  variables: {
+                    colorPrimary: '#4f46e5',
+                    colorBackground: '#171F2E',
+                    colorInputBackground: '#0A0A0F',
+                    colorText: '#ffffff',
+                    colorTextSecondary: '#9ca3af',
+                    colorInputText: '#ffffff',
+                    colorTextOnPrimaryBackground: '#ffffff',
+                  },
+                  elements: {
+                    card: "bg-[#171F2E] border border-white/5 shadow-2xl rounded-[24px] w-full",
+                    headerTitle: "text-white font-extrabold text-xl",
+                    headerSubtitle: "text-white/40 text-xs",
+                    socialButtonsBlockButton: "bg-white/[0.02] border-white/5 hover:bg-white/[0.06] text-white",
+                    formButtonPrimary: "bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm py-2.5 shadow-lg shadow-indigo-600/15 transition-all duration-150 active:scale-[0.98]",
+                    formFieldInput: "bg-[#0A0A0F] border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:border-indigo-500/50",
+                    footerActionLink: "text-indigo-400 hover:text-indigo-300 font-semibold",
+                    footerActionText: "text-white/40",
+                    identityPreviewText: "text-white",
+                    identityPreviewEditButtonIcon: "text-white/50",
+                    dividerText: "text-white/30",
+                    dividerLine: "bg-white/5",
+                    formFieldLabel: "text-white/50 text-xs font-medium uppercase tracking-wider",
+                    footer: "bg-transparent",
+                  }
+                }}
+              />
               <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-[0.98] transition-all duration-150"
+                type="button"
+                onClick={() => {
+                  window.history.pushState(null, "", "/login");
+                  setAuthMode("options");
+                }}
+                className="mt-4 flex items-center justify-center gap-1.5 text-xs text-white/50 hover:text-white font-medium transition-colors"
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    Sign In
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
+                ← Back to Workspace Options
               </button>
-            </form>
+            </div>
+          ) : authMode === "signin" ? (
+            <div className="w-full flex flex-col items-center">
+              <SignIn 
+                routing="hash"
+                signUpUrl="/login?mode=signup"
+                appearance={{
+                  variables: {
+                    colorPrimary: '#4f46e5',
+                    colorBackground: '#171F2E',
+                    colorInputBackground: '#0A0A0F',
+                    colorText: '#ffffff',
+                    colorTextSecondary: '#9ca3af',
+                    colorInputText: '#ffffff',
+                    colorTextOnPrimaryBackground: '#ffffff',
+                  },
+                  elements: {
+                    card: "bg-[#171F2E] border border-white/5 shadow-2xl rounded-[24px] w-full",
+                    headerTitle: "text-white font-extrabold text-xl",
+                    headerSubtitle: "text-white/40 text-xs",
+                    socialButtonsBlockButton: "bg-white/[0.02] border-white/5 hover:bg-white/[0.06] text-white",
+                    formButtonPrimary: "bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm py-2.5 shadow-lg shadow-indigo-600/15 transition-all duration-150 active:scale-[0.98]",
+                    formFieldInput: "bg-[#0A0A0F] border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:border-indigo-500/50",
+                    footerActionLink: "text-indigo-400 hover:text-indigo-300 font-semibold",
+                    footerActionText: "text-white/40",
+                    identityPreviewText: "text-white",
+                    identityPreviewEditButtonIcon: "text-white/50",
+                    dividerText: "text-white/30",
+                    dividerLine: "bg-white/5",
+                    formFieldLabel: "text-white/50 text-xs font-medium uppercase tracking-wider",
+                    footer: "bg-transparent",
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  window.history.pushState(null, "", "/login");
+                  setAuthMode("options");
+                }}
+                className="mt-4 flex items-center justify-center gap-1.5 text-xs text-white/50 hover:text-white font-medium transition-colors"
+              >
+                ← Back to Workspace Options
+              </button>
+            </div>
           ) : (
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold tracking-wider text-white/50 uppercase">Full Name</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-                  <input
-                    type="text"
-                    value={regName}
-                    onChange={(e) => setRegName(e.target.value)}
-                    placeholder="Sanjay Aggarwal"
-                    required
-                    disabled={isLoading}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white/[0.02] border border-white/10 rounded-xl text-sm placeholder:text-white/20 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.04] transition-all"
-                  />
-                </div>
+            <div className="w-full max-w-[420px] p-8 bg-[#171F2E] border border-white/5 shadow-2xl rounded-[24px] flex flex-col justify-center items-center text-center space-y-6 relative overflow-hidden">
+              {/* Subtle top glow */}
+              <div className="absolute top-[-30%] left-[-30%] w-[100%] h-[100%] rounded-full bg-indigo-500/5 blur-[80px] pointer-events-none" />
+
+              <div className="space-y-2 relative z-10 pt-4">
+                <h2 className="text-2xl font-bold text-white tracking-tight">
+                  DocAI Workspace
+                </h2>
+                <p className="text-sm text-white/50 max-w-[290px] mx-auto leading-relaxed">
+                  Access the secure semantic document intelligence sandbox
+                </p>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold tracking-wider text-white/50 uppercase">Email address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-                  <input
-                    type="email"
-                    value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    placeholder="you@company.com"
-                    required
-                    disabled={isLoading}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white/[0.02] border border-white/10 rounded-xl text-sm placeholder:text-white/20 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.04] transition-all"
-                  />
-                </div>
+              <div className="w-full flex flex-col gap-3.5 relative z-10 pt-4 pb-4">
+                <button
+                  onClick={() => {
+                    window.history.pushState(null, "", "/login?mode=signin");
+                    setAuthMode("signin");
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-semibold rounded-full text-sm py-3 px-6 shadow-lg shadow-blue-500/10 active:scale-[0.98] transition-all duration-150"
+                >
+                  Sign In to Workspace
+                  <Sparkles className="h-4 w-4 text-white" />
+                </button>
+                
+                <button
+                  onClick={() => {
+                    window.history.pushState(null, "", "/login?mode=signup");
+                    setAuthMode("signup");
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-transparent border border-white/20 hover:bg-white/[0.02] hover:border-white/30 text-white font-semibold rounded-full text-sm py-3 px-6 active:scale-[0.98] transition-all duration-150"
+                >
+                  Register Workspace Account
+                </button>
               </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold tracking-wider text-white/50 uppercase">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-                  <input
-                    type="password"
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    placeholder="Minimum 8 characters"
-                    required
-                    minLength={8}
-                    disabled={isLoading}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white/[0.02] border border-white/10 rounded-xl text-sm placeholder:text-white/20 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.04] transition-all"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-[0.98] transition-all duration-150"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  <>
-                    Create Account
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-            </form>
+            </div>
           )}
-
-
 
           {/* Policy */}
-          <p className="text-[10px] text-center text-white/30 px-4">
+          <p className="text-[10px] text-center text-white/30 px-4 mt-6">
             By signing in, you agree to our Terms of Service and Privacy Policy. Security auditing is active.
           </p>
-
         </div>
       </div>
+
     </div>
   );
 }
