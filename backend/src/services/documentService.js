@@ -126,6 +126,7 @@ async function processDocument(documentId, userId) {
         status: 'completed',
         pageCount: pages.length,
         chunkCount: chunks.length,
+        errorMessage: null,
         processedAt: new Date(),
       },
     });
