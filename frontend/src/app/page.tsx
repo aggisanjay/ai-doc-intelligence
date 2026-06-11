@@ -478,9 +478,12 @@ export default function LandingPage() {
 
             <div className="pt-8 border-t border-white/5 mt-6 flex items-center justify-between">
               <span className="text-[10px] text-white/35 font-medium">DocAI Workspace Platform</span>
-              <Link href="/login?mode=signup" className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
+              <button 
+                onClick={() => setAuthModal("signup")}
+                className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 bg-transparent border-0 cursor-pointer"
+              >
                 Configure Workspace <ArrowRight className="h-3 w-3" />
-              </Link>
+              </button>
             </div>
           </div>
         </div>

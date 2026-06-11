@@ -30,10 +30,10 @@ export function useAuth() {
   }, [setAuth, router]);
 
   const logout = useCallback(async () => {
-    storeLogout();
-    await signOut();
-    router.push("/login");
-  }, [storeLogout, signOut, router]);
+     storeLogout();
+     await signOut();
+     router.push("/");
+   }, [storeLogout, signOut, router]);
 
   const clerkSync = useCallback(async (email: string, fullName?: string) => {
     const response = await authAPI.clerkSync({ email, full_name: fullName });

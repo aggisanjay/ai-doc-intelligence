@@ -17,12 +17,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     loadFromStorage(); 
   }, [loadFromStorage]);
 
-  // Sync Clerk sign-out state with local store and redirect to login
+  // Sync Clerk sign-out state with local store and redirect to landing page
   useEffect(() => {
     if (isLoaded) {
       if (!isSignedIn) {
         useAuthStore.getState().logout();
-        router.push("/login");
+        router.push("/");
       }
     }
   }, [isLoaded, isSignedIn, router]);
@@ -30,7 +30,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Fallback route protection if local token is lost
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (!useAuthStore.getState().isAuthenticated) router.push("/login");
+      if (!useAuthStore.getState().isAuthenticated) router.push("/");
     }, 150);
     return () => clearTimeout(timeout);
   }, [router]);
