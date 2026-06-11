@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, Upload, MessageSquare, FileText, Plus, 
   ChevronRight, Trash2, Search, BarChart3, Settings, Database, Folder,
@@ -24,6 +24,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isRecentCollapsed, setIsRecentCollapsed] = useState(false);
   
@@ -119,7 +120,7 @@ export function Sidebar() {
       await chatAPI.deleteConversation(id);
       setConversations(conversations.filter(c => c.id !== id));
       if (pathname === `/chat/${id}`) {
-        window.location.href = "/chat/new";
+        router.push("/chat/new");
       }
     } catch (err) {
       console.error("Failed to delete conversation", err);
