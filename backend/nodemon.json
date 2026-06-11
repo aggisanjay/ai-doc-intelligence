@@ -1,0 +1,8 @@
+{
+  "ignore": [
+    "uploads/**",
+    "vector_stores/**",
+    "*.log",
+    "test_*.js"
+  ]
+}

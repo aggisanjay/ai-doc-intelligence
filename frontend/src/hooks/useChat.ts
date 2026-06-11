@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { chatAPI } from "@/lib/api";
 import { useChatStore } from "@/stores/chatStore";
 import { ChatMessage, SourceCitation } from "@/types";
 
 export function useChat() {
   const store = useChatStore();
+  const router = useRouter();
 
   const sendMessage = useCallback(async (query: string) => {
     const userMessage: ChatMessage = { role: "user", content: query, timestamp: new Date().toISOString() };
@@ -27,7 +29,12 @@ export function useChat() {
         switch (event.type) {
           case "sources": sources = event.data; break;
           case "content": store.appendStreamingContent(event.data); break;
-          case "done": store.finalizeStreaming(sources); break;
+          case "done": 
+            store.finalizeStreaming(sources, event.conversation_id);
+            if (event.conversation_id && !store.conversationId) {
+              router.push(`/chat/${event.conversation_id}`);
+            }
+            break;
           case "error": throw new Error(event.data);
         }
       }
@@ -45,7 +52,11 @@ export function useChat() {
 
         const { answer, sources: respSources, conversation_id } = response.data;
         store.addMessage({ role: "assistant", content: answer, sources: respSources, timestamp: new Date().toISOString() });
+        const isNew = !store.conversationId;
         store.setConversationId(conversation_id);
+        if (conversation_id && isNew) {
+          router.push(`/chat/${conversation_id}`);
+        }
       } catch (fallbackError: any) {
         store.addMessage({
           role: "assistant",
@@ -57,7 +68,7 @@ export function useChat() {
       store.setLoading(false);
       store.setStreaming(false);
     }
-  }, [store]);
+  }, [store, router]);
 
   const loadConversation = useCallback(async (conversationId: string) => {
     try {

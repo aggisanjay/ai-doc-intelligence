@@ -110,10 +110,16 @@ async function* streamingResponse({ request, chunks, sources, chatHistory, user,
         fullAnswer += payload.data || '';
       } catch { /* ignore */ }
     }
+    
+    // Skip the generic 'done' or 'error' events if we want custom finalization
+    if (sseChunk.includes('"type":"done"') || sseChunk.includes('"type": "done"')) {
+      continue;
+    }
     yield sseChunk;
   }
 
-  await saveToConversation({ request, answer: fullAnswer, sources, user, conversation });
+  const conversationId = await saveToConversation({ request, answer: fullAnswer, sources, user, conversation });
+  yield `data: ${JSON.stringify({ type: 'done', conversation_id: conversationId })}\n\n`;
 }
 
 async function getConversations(userId) {

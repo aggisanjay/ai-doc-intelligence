@@ -16,6 +16,36 @@ function formatUser(user) {
   };
 }
 
+async function ensureDefaultWorkspaceAndCollections(userId) {
+  let workspace = await prisma.workspace.findFirst({ where: { ownerId: userId } });
+  if (!workspace) {
+    workspace = await prisma.workspace.create({
+      data: {
+        name: 'My Workspace',
+        ownerId: userId,
+      }
+    });
+
+    const defaultCollections = [
+      'Engineering Docs',
+      'Product Knowledge',
+      'Research Papers',
+      'Internal SOPs',
+      'Training Materials'
+    ];
+
+    for (const name of defaultCollections) {
+      await prisma.collection.create({
+        data: {
+          name,
+          workspaceId: workspace.id,
+        }
+      });
+    }
+    console.log(`[AuthService] Auto-provisioned default Workspace & 5 Collections for user: ${userId}`);
+  }
+}
+
 async function register({ email, password, fullName }) {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) throw httpError('Email already registered', 409);
@@ -28,6 +58,8 @@ async function register({ email, password, fullName }) {
       role: 'user',
     },
   });
+
+  await ensureDefaultWorkspaceAndCollections(user.id);
 
   return {
     access_token: createAccessToken(user.id, user.role),
@@ -42,6 +74,8 @@ async function login({ email, password }) {
     throw httpError('Invalid email or password', 401);
   }
   if (!user.isActive) throw httpError('Account is deactivated', 403);
+
+  await ensureDefaultWorkspaceAndCollections(user.id);
 
   return {
     access_token: createAccessToken(user.id, user.role),
@@ -68,6 +102,8 @@ async function clerkSync({ email, fullName }) {
     throw httpError('Account is deactivated', 403);
   }
 
+  await ensureDefaultWorkspaceAndCollections(user.id);
+
   return {
     access_token: createAccessToken(user.id, user.role),
     token_type: 'bearer',
@@ -75,4 +111,4 @@ async function clerkSync({ email, fullName }) {
   };
 }
 
-module.exports = { register, login, clerkSync, formatUser };
+module.exports = { register, login, clerkSync, formatUser, ensureDefaultWorkspaceAndCollections };

@@ -12,20 +12,24 @@ async function extractPdf(filePath, originalFilename) {
   const buffer = fs.readFileSync(filePath);
   const pages = [];
 
-  // pagerender is called once per page by pdf-parse.
-  // We collect per-page text here; the callback must return a string.
   await pdfParse(buffer, {
     pagerender: (pageData) => {
       return pageData.getTextContent().then((tc) => {
-        const text = tc.items
-          .map(item => ('str' in item ? item.str : ''))
-          .join(' ')
-          .replace(/\s+/g, ' ')
-          .trim();
+        let lastY, text = '';
+        for (const item of tc.items) {
+          if (!item || !('str' in item)) continue;
+          if (lastY === undefined || lastY === item.transform[5]) {
+            text += item.str;
+          } else {
+            text += '\n' + item.str;
+          }
+          lastY = item.transform[5];
+        }
 
-        if (text.length > 0) {
+        const cleanedText = text.replace(/\s+/g, ' ').trim();
+        if (cleanedText.length > 0) {
           pages.push({
-            text,
+            text: cleanedText,
             pageNumber: pageData.pageIndex + 1,
             sourceFile: originalFilename,
           });

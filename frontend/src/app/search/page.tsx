@@ -89,7 +89,7 @@ export default function SearchPage() {
         {/* Large Search Input Area */}
         <div className="bg-[#171F2E]/50 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative shadow-xl glow-primary">
           <div className="flex items-start gap-3">
-            <Search className="h-5 w-5 text-white/30 mt-3 shrink-0" />
+            <Search className="h-5 w-5 text-white/30 mt-2 shrink-0" />
             <textarea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -101,7 +101,7 @@ export default function SearchPage() {
                   handleSearch(query);
                 }
               }}
-              className="flex-1 bg-transparent text-white placeholder:text-white/20 resize-none border-none focus:ring-0 focus:outline-none text-sm leading-relaxed"
+              className="flex-1 bg-transparent text-white placeholder:text-white/20 resize-none border-none focus:ring-0 focus:outline-none text-sm leading-relaxed py-2"
             />
           </div>
 

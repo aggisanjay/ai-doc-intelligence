@@ -41,9 +41,12 @@ export const authAPI = {
 };
 
 export const documentsAPI = {
-  upload: (file: File) => {
+  upload: (file: File, collectionId?: string) => {
     const formData = new FormData();
     formData.append("file", file);
+    if (collectionId) {
+      formData.append("collectionId", collectionId);
+    }
     return api.post("/documents/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
       timeout: 120000,
@@ -53,13 +56,29 @@ export const documentsAPI = {
   get: (id: string) => api.get(`/documents/${id}`),
   delete: (id: string) => api.delete(`/documents/${id}`),
   reprocess: (id: string) => api.post(`/documents/${id}/reprocess`),
+  runAction: (id: string, action: string) => api.post(`/documents/${id}/action`, { action }),
+  compare: (docAId: string, docBId: string) => api.post("/documents/compare", { docAId, docBId }),
+};
+
+export const workspacesAPI = {
+  list: () => api.get("/workspaces"),
+  create: (name: string) => api.post("/workspaces", { name }),
+  delete: (id: string) => api.delete(`/workspaces/${id}`),
+  listCollections: (workspaceId?: string) => api.get("/workspaces/collections", { params: { workspaceId } }),
+  createCollection: (name: string, workspaceId: string) => api.post("/workspaces/collections", { name, workspaceId }),
+  getCollection: (id: string) => api.get(`/workspaces/collections/${id}`),
+  deleteCollection: (id: string) => api.delete(`/workspaces/collections/${id}`),
+};
+
+export const analyticsAPI = {
+  getDashboard: () => api.get("/analytics/dashboard"),
 };
 
 export const chatAPI = {
-  query: (data: { query: string; conversation_id?: string; document_ids: string[] }) =>
+  query: (data: { query: string; conversation_id?: string; document_ids: string[]; collection_id?: string }) =>
     api.post("/chat/query", data),
 
-  queryStream: async function* (data: { query: string; conversation_id?: string; document_ids: string[] }) {
+  queryStream: async function* (data: { query: string; conversation_id?: string; document_ids: string[]; collection_id?: string }) {
     const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
     const response = await fetch(`${API_BASE_URL}/chat/query/stream`, {
       method: "POST",

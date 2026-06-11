@@ -6,7 +6,6 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  
 }
 
 model User {
@@ -21,8 +20,34 @@ model User {
 
   documents     Document[]
   conversations Conversation[]
+  workspaces    Workspace[]
 
   @@map("users")
+}
+
+model Workspace {
+  id          String       @id @default(uuid())
+  name        String
+  ownerId     String       @map("owner_id")
+  owner       User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  collections Collection[]
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@map("workspaces")
+}
+
+model Collection {
+  id            String         @id @default(uuid())
+  name          String
+  workspaceId   String         @map("workspace_id")
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  documents     Document[]
+  conversations Conversation[]
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  @@map("collections")
 }
 
 model Document {
@@ -32,12 +57,15 @@ model Document {
   fileType         String    @map("file_type")
   fileSize         Int       @map("file_size")
   filePath         String    @map("file_path")
+  fileData         Bytes?    @map("file_data")
   status           String    @default("pending")
   chunkCount       Int       @default(0) @map("chunk_count")
   pageCount        Int       @default(0) @map("page_count")
   errorMessage     String?   @map("error_message")
   ownerId          String    @map("owner_id")
   owner            User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  collectionId     String?   @map("collection_id")
+  collection       Collection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
   createdAt        DateTime  @default(now()) @map("created_at")
   processedAt      DateTime? @map("processed_at")
 
@@ -55,6 +83,8 @@ model Conversation {
   documentId  String?   @map("document_id")
   document    Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
   documentIds Json      @default("[]") @map("document_ids")
+  collectionId String?   @map("collection_id")
+  collection   Collection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 

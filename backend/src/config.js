@@ -13,6 +13,7 @@ const config = {
 
   // Gemini
   geminiApiKey: process.env.GEMINI_API_KEY || '',
+  groqApiKey: process.env.GROQ_API_KEY || '',
 
   // Redis
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379/0',

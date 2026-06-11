@@ -8,10 +8,15 @@ import { ChatInterface } from "@/components/chat/ChatInterface";
 function ChatContent() {
   const searchParams = useSearchParams();
   const docId = searchParams.get("doc") || undefined;
+  const collectionId = searchParams.get("collectionId") || undefined;
 
   return (
     <div className="h-full -m-6">
-      <ChatInterface initialDocumentId={docId} conversationId="new" />
+      <ChatInterface 
+        initialDocumentId={docId} 
+        initialCollectionId={collectionId} 
+        conversationId="new" 
+      />
     </div>
   );
 }

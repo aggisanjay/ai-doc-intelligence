@@ -25,12 +25,13 @@ function formatDocument(doc) {
     page_count: doc.pageCount,
     error_message: doc.errorMessage,
     owner_id: doc.ownerId,
+    collection_id: doc.collectionId || null,
     created_at: doc.createdAt,
     processed_at: doc.processedAt,
   };
 }
 
-async function uploadDocument(file, user) {
+async function uploadDocument(file, user, collectionId = null) {
   const ext = path.extname(file.originalname).toLowerCase();
   if (!ALLOWED_EXTENSIONS.has(ext)) {
     throw httpError(`Unsupported file type: ${ext}. Allowed: .pdf, .docx, .doc`, 400);
@@ -48,6 +49,9 @@ async function uploadDocument(file, user) {
   const finalPath = path.join(userUploadDir, uniqueFilename);
   await moveFile(file.path, finalPath);
 
+  // Read the uploaded file into a binary buffer to save in the database
+  const fileBuffer = fs.readFileSync(finalPath);
+
   const document = await prisma.document.create({
     data: {
       filename: uniqueFilename,
@@ -55,13 +59,42 @@ async function uploadDocument(file, user) {
       fileType: ext.replace('.', ''),
       fileSize: file.size,
       filePath: finalPath,
+      fileData: fileBuffer, // Save the binary file data in DB
       status: 'pending',
       ownerId: user.id,
+      collectionId: collectionId || null,
     },
   });
 
-  console.log(`[DocumentService] Uploaded: ${file.originalname} -> ${document.id}`);
+  console.log(`[DocumentService] Uploaded and saved to DB: ${file.originalname} -> ${document.id}`);
   return document;
+}
+
+function resolveFilePath(doc) {
+  if (!doc) return '';
+  // 1. If the path exists as-is on the filesystem, use it
+  if (fs.existsSync(doc.filePath)) {
+    return doc.filePath;
+  }
+  // 2. Otherwise, resolve it relative to the local configuration directory
+  const localPath = path.join(path.resolve(config.uploadDir), doc.ownerId, doc.filename);
+  if (fs.existsSync(localPath)) {
+    return localPath;
+  }
+  // 3. If file is missing locally, but we have fileData in the database, restore it!
+  if (doc.fileData) {
+    try {
+      const dir = path.dirname(localPath);
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(localPath, doc.fileData);
+      console.log(`[DocumentService] Successfully restored missing file from database to: ${localPath}`);
+      return localPath;
+    } catch (err) {
+      console.error(`[DocumentService] Error restoring file from database:`, err.message);
+    }
+  }
+  // 4. Fallback to the local path so any subsequent ENOENT errors point to the local file system path
+  return localPath;
 }
 
 async function processDocument(documentId, userId) {
@@ -72,6 +105,9 @@ async function processDocument(documentId, userId) {
     console.error(`[DocumentService] Not found: ${documentId}`);
     return;
   }
+
+  // Resolve filePath dynamically
+  document.filePath = resolveFilePath(document);
 
   try {
     await prisma.document.update({ where: { id: documentId }, data: { status: 'processing' } });
@@ -105,15 +141,36 @@ async function processDocument(documentId, userId) {
 }
 
 async function getUserDocuments(userId) {
-  return prisma.document.findMany({
+  const docs = await prisma.document.findMany({
     where: { ownerId: userId },
     orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      filename: true,
+      originalFilename: true,
+      fileType: true,
+      fileSize: true,
+      filePath: true,
+      status: true,
+      chunkCount: true,
+      pageCount: true,
+      errorMessage: true,
+      ownerId: true,
+      collectionId: true,
+      createdAt: true,
+      processedAt: true,
+    }
+  });
+  return docs.map(doc => {
+    doc.filePath = resolveFilePath(doc);
+    return doc;
   });
 }
 
 async function getDocument(documentId, userId) {
   const doc = await prisma.document.findFirst({ where: { id: documentId, ownerId: userId } });
   if (!doc) throw httpError('Document not found', 404);
+  doc.filePath = resolveFilePath(doc);
   return doc;
 }
 

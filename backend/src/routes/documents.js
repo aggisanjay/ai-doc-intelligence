@@ -19,7 +19,7 @@ router.post('/upload', authenticate, upload.single('file'), async (req, res, nex
   try {
     if (!req.file) return res.status(400).json({ detail: 'No file provided' });
 
-    const document = await docService.uploadDocument(req.file, req.user);
+    const document = await docService.uploadDocument(req.file, req.user, req.body.collectionId);
 
     // Process asynchronously — do not await
     docService.processDocument(document.id, req.user.id).catch(err =>
@@ -27,6 +27,55 @@ router.post('/upload', authenticate, upload.single('file'), async (req, res, nex
     );
 
     res.status(201).json(docService.formatDocument(document));
+  } catch (err) { next(err); }
+});
+
+// POST /api/v1/documents/compare
+router.post('/compare', authenticate, async (req, res, next) => {
+  try {
+    const { docAId, docBId } = req.body;
+    if (!docAId || !docBId) return res.status(400).json({ detail: 'docAId and docBId are required' });
+
+    const docA = await docService.getDocument(docAId, req.user.id);
+    const docB = await docService.getDocument(docBId, req.user.id);
+
+    if (docA.status !== 'completed' || docB.status !== 'completed') {
+      return res.status(400).json({ detail: 'Both documents must be successfully processed before comparing' });
+    }
+
+    const textExtractor = require('../rag/textExtractor');
+    const pagesA = await textExtractor.extract(docA.filePath, docA.originalFilename);
+    const fullTextA = pagesA.map(p => p.text).join('\n');
+
+    const pagesB = await textExtractor.extract(docB.filePath, docB.originalFilename);
+    const fullTextB = pagesB.map(p => p.text).join('\n');
+
+    const llmService = require('../services/llmService');
+    const comparison = await llmService.compareDocuments(fullTextA, fullTextB);
+
+    res.json(comparison);
+  } catch (err) { next(err); }
+});
+
+// POST /api/v1/documents/:id/action
+router.post('/:id/action', authenticate, async (req, res, next) => {
+  try {
+    const { action } = req.body;
+    if (!action) return res.status(400).json({ detail: 'action is required' });
+
+    const doc = await docService.getDocument(req.params.id, req.user.id);
+    if (doc.status !== 'completed') {
+      return res.status(400).json({ detail: 'Document must be processed successfully before running actions' });
+    }
+
+    const textExtractor = require('../rag/textExtractor');
+    const pages = await textExtractor.extract(doc.filePath, doc.originalFilename);
+    const fullText = pages.map(p => p.text).join('\n');
+
+    const llmService = require('../services/llmService');
+    const result = await llmService.runDocumentAction(fullText, action);
+
+    res.json({ action, result });
   } catch (err) { next(err); }
 });
 

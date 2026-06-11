@@ -7,13 +7,15 @@ import { MessageBubble } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
 import { Bot, FileText, X, Check, Sparkles, HelpCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { workspacesAPI } from "@/lib/api";
 
 interface ChatInterfaceProps {
   initialDocumentId?: string;
+  initialCollectionId?: string;
   conversationId?: string;
 }
 
-export function ChatInterface({ initialDocumentId, conversationId }: ChatInterfaceProps) {
+export function ChatInterface({ initialDocumentId, initialCollectionId, conversationId }: ChatInterfaceProps) {
   const { 
     messages, isLoading, isStreaming, streamingContent, selectedDocumentIds, 
     sendMessage, loadConversation, setSelectedDocuments, resetChat 
@@ -29,11 +31,18 @@ export function ChatInterface({ initialDocumentId, conversationId }: ChatInterfa
       resetChat();
       if (initialDocumentId) {
         setSelectedDocuments([initialDocumentId]);
+      } else if (initialCollectionId) {
+        workspacesAPI.getCollection(initialCollectionId)
+          .then((res) => {
+            const docs = res.data.documents || [];
+            setSelectedDocuments(docs.map((d: any) => d.id));
+          })
+          .catch((err) => console.error("Error setting folder chat scope:", err));
       }
     }
     // Only re-run the effect when the route/prop conversation or initial doc ID changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationId, initialDocumentId]);
+  }, [conversationId, initialDocumentId, initialCollectionId]);
 
   useEffect(() => {
     if (scrollRef.current) {

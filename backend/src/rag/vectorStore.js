@@ -74,7 +74,9 @@ function saveIndex(userId, vectors, metadata) {
   vectors.forEach((vec, i) => {
     vec.forEach((v, j) => buf.writeFloatLE(v, (i * dim + j) * 4));
   });
-  fs.writeFileSync(vecPath(userId), buf);
+  const vp = vecPath(userId);
+  fs.mkdirSync(path.dirname(vp), { recursive: true });
+  fs.writeFileSync(vp, buf);
   fs.writeFileSync(metaPath(userId), JSON.stringify(metadata));
 }
 

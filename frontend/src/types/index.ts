@@ -22,6 +22,7 @@ export interface Document {
   chunk_count: number;
   page_count: number;
   error_message: string | null;
+  collection_id?: string | null;
   created_at: string;
   processed_at: string | null;
 }

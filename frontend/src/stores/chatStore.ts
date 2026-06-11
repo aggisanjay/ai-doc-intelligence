@@ -15,7 +15,7 @@ interface ChatState {
   setLoading: (loading: boolean) => void;
   setStreaming: (streaming: boolean) => void;
   appendStreamingContent: (content: string) => void;
-  finalizeStreaming: (sources: SourceCitation[]) => void;
+  finalizeStreaming: (sources: SourceCitation[], conversationId?: string) => void;
   resetStreamingContent: () => void;
   resetChat: () => void;
 }
@@ -36,7 +36,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setStreaming: (streaming) => set({ isStreaming: streaming }),
   appendStreamingContent: (content) => set((state) => ({ streamingContent: state.streamingContent + content })),
 
-  finalizeStreaming: (sources) => {
+  finalizeStreaming: (sources, conversationId) => {
     const { streamingContent, messages } = get();
     const assistantMessage: ChatMessage = {
       role: "assistant",
@@ -44,7 +44,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
       sources,
       timestamp: new Date().toISOString(),
     };
-    set({ messages: [...messages, assistantMessage], streamingContent: "", isStreaming: false });
+    set({
+      messages: [...messages, assistantMessage],
+      streamingContent: "",
+      isStreaming: false,
+      ...(conversationId ? { conversationId } : {}),
+    });
   },
 
   resetStreamingContent: () => set({ streamingContent: "" }),
