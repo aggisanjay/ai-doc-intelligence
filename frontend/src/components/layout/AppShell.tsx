@@ -17,23 +17,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     loadFromStorage(); 
   }, [loadFromStorage]);
 
-  // Sync Clerk sign-out state with local store and redirect to landing page
+  // Sync Clerk state and check local auth reactively
   useEffect(() => {
     if (isLoaded) {
       if (!isSignedIn) {
         useAuthStore.getState().logout();
         router.push("/");
+      } else if (!isAuthenticated) {
+        router.push("/");
       }
     }
-  }, [isLoaded, isSignedIn, router]);
-
-  // Fallback route protection if local token is lost
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (!useAuthStore.getState().isAuthenticated) router.push("/");
-    }, 150);
-    return () => clearTimeout(timeout);
-  }, [router]);
+  }, [isLoaded, isSignedIn, isAuthenticated, router]);
 
   if (!isLoaded || !isAuthenticated || !isSignedIn) {
     return (
