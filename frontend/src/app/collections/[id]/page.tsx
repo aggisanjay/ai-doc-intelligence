@@ -76,9 +76,9 @@ export default function CollectionDetailPage() {
   if (isLoading) {
     return (
       <AppShell>
-        <div className="flex flex-col items-center justify-center py-24 bg-white/[0.01] border border-white/5 rounded-2xl animate-pulse max-w-7xl mx-auto">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-          <span className="mt-3 text-xs font-semibold text-indigo-400 uppercase tracking-wider">Syncing Collection Folders</span>
+        <div className="flex flex-col items-center justify-center py-24 bg-[#0c0c0e] border border-white/10 rounded-3xl animate-pulse max-w-7xl mx-auto font-sans shadow-lg">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+          <span className="mt-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Syncing Collection</span>
         </div>
       </AppShell>
     );
@@ -87,12 +87,12 @@ export default function CollectionDetailPage() {
   if (!collection) {
     return (
       <AppShell>
-        <div className="max-w-xl mx-auto text-center py-20 space-y-4">
-          <AlertCircle className="h-12 w-12 text-rose-400 mx-auto" />
+        <div className="max-w-xl mx-auto text-center py-20 space-y-4 font-sans">
+          <AlertCircle className="h-10 w-10 text-rose-400 mx-auto" />
           <h2 className="text-xl font-bold text-white">Collection Not Found</h2>
-          <p className="text-xs text-white/40">The folder collection you are trying to access does not exist or has been deleted.</p>
-          <Link href="/dashboard" className="text-xs text-indigo-400 font-bold flex items-center justify-center gap-1">
-            <ArrowLeft className="h-4.5 w-4.5" /> Back to Dashboard
+          <p className="text-xs text-slate-400">The folder collection you are trying to access does not exist or has been deleted.</p>
+          <Link href="/dashboard" className="text-xs text-blue-400 font-bold flex items-center justify-center gap-1">
+            <ArrowLeft className="h-4 w-4" /> Back to Dashboard
           </Link>
         </div>
       </AppShell>
@@ -101,40 +101,38 @@ export default function CollectionDetailPage() {
 
   const documents = collection.documents || [];
   const completedDocs = documents.filter((d: any) => d.status === "completed");
-  const totalChunks = documents.reduce((acc: number, d: any) => acc + d.chunkCount, 0);
+  const totalChunks = documents.reduce((acc: number, d: any) => acc + (d.chunkCount || d.chunk_count || 0), 0);
 
   return (
     <AppShell>
       <div className="max-w-7xl mx-auto space-y-8 font-sans pb-16">
         
         {/* Back and Breadcrumbs */}
-        <div className="flex items-center gap-2 text-xs text-white/45">
+        <div className="flex items-center gap-2 text-xs text-slate-400">
           <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
           <span>/</span>
-          <span className="text-white/80">Collections</span>
+          <span className="text-slate-500">Collections</span>
           <span>/</span>
-          <span className="text-white font-semibold">{collection.name}</span>
+          <span className="text-white font-medium">{collection.name}</span>
         </div>
 
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 rounded-2xl bg-[#171F2E]/40 border border-white/5 relative overflow-hidden backdrop-blur-md">
-          <div className="absolute top-[-40px] left-[-40px] w-28 h-28 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-          
-          <div className="flex items-start gap-4 z-10">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 sm:p-8 rounded-3xl bg-[#0c0c0e] border border-white/10 shadow-xl">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl border border-white/10 bg-[#121216] text-blue-400 flex items-center justify-center shrink-0 shadow-sm">
               <FolderClosed className="h-6 w-6" />
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-white">{collection.name}</h1>
-              <p className="text-xs text-white/40 mt-1">
-                Indexed Folder collection • {documents.length} files • {totalChunks} active vector vectors
+              <p className="text-xs text-slate-400 mt-1">
+                Folder collection • {documents.length} files • {totalChunks} active vectors
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 z-10">
-            <label className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/15 transition-all cursor-pointer">
-              <Upload className="h-4 w-4" />
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white rounded-full text-xs font-semibold shadow-sm transition-all cursor-pointer">
+              <Upload className="h-3.5 w-3.5" />
               {isUploading ? "Uploading..." : "Add to Collection"}
               <input 
                 type="file" 
@@ -146,8 +144,8 @@ export default function CollectionDetailPage() {
             </label>
             {completedDocs.length > 0 && (
               <Link href={`/chat/new?collectionId=${collection.id}`}>
-                <button className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 active:scale-[0.98] text-white rounded-xl text-xs font-semibold transition-all">
-                  <MessageSquare className="h-4 w-4 text-indigo-400" />
+                <button className="flex items-center gap-2 px-5 py-2.5 bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 active:scale-[0.98] text-white rounded-full text-xs font-semibold transition-all">
+                  <MessageSquare className="h-3.5 w-3.5 text-blue-400" />
                   Chat Scoped Folder
                 </button>
               </Link>
@@ -156,20 +154,20 @@ export default function CollectionDetailPage() {
         </div>
 
         {uploadError && (
-          <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl flex items-center gap-2">
+          <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-2xl flex items-center gap-2 shadow-sm">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{uploadError}</span>
           </div>
         )}
 
         {/* Documents list */}
-        <div className="bg-[#171F2E]/30 border border-white/5 rounded-2xl p-6 backdrop-blur-md">
+        <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-lg">
           <h3 className="text-sm font-bold text-white mb-4">Files in this Collection</h3>
           
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-white/5 bg-white/[0.01] text-[10px] font-bold uppercase tracking-widest text-white/40">
+                <tr className="border-b border-white/10 bg-white/[0.02] text-[10px] font-bold uppercase tracking-widest text-slate-400">
                   <th className="px-5 py-3.5">Filename</th>
                   <th className="px-5 py-3.5">Status</th>
                   <th className="px-5 py-3.5">Size</th>
@@ -177,7 +175,7 @@ export default function CollectionDetailPage() {
                   <th className="px-5 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-xs text-white/80">
+              <tbody className="divide-y divide-white/10 text-xs text-slate-300">
                 {documents.map((doc: any) => {
                   const status = doc.status;
                   const isReady = status === "completed";
@@ -185,18 +183,20 @@ export default function CollectionDetailPage() {
                   const isPending = status === "pending" || status === "processing";
 
                   return (
-                    <tr key={doc.id} className="hover:bg-white/[0.01] transition-colors group">
+                    <tr key={doc.id} className="hover:bg-white/[0.03] transition-colors group">
                       <td className="px-5 py-4 max-w-xs truncate">
-                        <Link href={`/documents/${doc.id}`} className="flex items-center gap-3 hover:text-indigo-400 transition-colors">
-                          <FileText className="h-4 w-4 text-indigo-400 shrink-0" />
-                          <span className="font-semibold block truncate" title={doc.originalFilename}>{doc.originalFilename}</span>
+                        <Link href={`/documents/${doc.id}`} className="flex items-center gap-3 hover:text-blue-400 transition-colors">
+                          <FileText className="h-4 w-4 text-blue-400 shrink-0" />
+                          <span className="font-semibold block truncate" title={doc.originalFilename || doc.original_filename}>
+                            {doc.originalFilename || doc.original_filename}
+                          </span>
                         </Link>
                       </td>
                       <td className="px-5 py-4">
-                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                          isReady ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/15' :
-                          isFailed ? 'bg-rose-500/10 text-rose-400 border-rose-500/15' :
-                          'bg-amber-500/10 text-amber-400 border-amber-500/15'
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium border ${
+                          isReady ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                          isFailed ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                          'bg-amber-500/10 text-amber-400 border-amber-500/20'
                         }`}>
                           {isPending && <Loader2 className="h-3 w-3 animate-spin" />}
                           {isReady && <CheckCircle2 className="h-3 w-3" />}
@@ -204,17 +204,17 @@ export default function CollectionDetailPage() {
                           {status}
                         </span>
                       </td>
-                      <td className="px-5 py-4 font-mono text-white/50">
-                        {doc.fileSize ? `${(doc.fileSize / (1024 * 1024)).toFixed(2)} MB` : "—"}
+                      <td className="px-5 py-4 font-mono text-slate-400">
+                        {doc.fileSize || doc.file_size ? `${((doc.fileSize || doc.file_size) / (1024 * 1024)).toFixed(2)} MB` : "—"}
                       </td>
-                      <td className="px-5 py-4 text-white/40">
-                        {isReady ? `${doc.pageCount} pgs • ${doc.chunkCount} chunks` : "—"}
+                      <td className="px-5 py-4 text-slate-400">
+                        {isReady ? `${doc.pageCount || doc.page_count} pgs • ${doc.chunkCount || doc.chunk_count} chunks` : "—"}
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           {isReady && (
                             <Link href={`/documents/${doc.id}`}>
-                              <button className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-white transition-colors">
+                              <button className="px-3.5 py-1.5 bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 rounded-full text-[10px] font-medium text-white transition-colors">
                                 View Details
                               </button>
                             </Link>
@@ -222,7 +222,7 @@ export default function CollectionDetailPage() {
                           {isFailed && (
                             <button 
                               onClick={() => handleReprocessDoc(doc.id)}
-                              className="p-1.5 text-white/40 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
+                              className="p-2 text-slate-400 hover:text-amber-400 hover:bg-white/[0.08] rounded-full transition-colors"
                               title="Reprocess file"
                             >
                               <RefreshCw className="h-4 w-4" />
@@ -230,7 +230,7 @@ export default function CollectionDetailPage() {
                           )}
                           <button 
                             onClick={() => handleDeleteDoc(doc.id)}
-                            className="p-1.5 text-white/40 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                            className="p-2 text-slate-400 hover:text-rose-400 hover:bg-white/[0.08] rounded-full transition-colors"
                             title="Delete file"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -242,7 +242,7 @@ export default function CollectionDetailPage() {
                 })}
                 {documents.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-12 text-center text-white/30 font-medium">
+                    <td colSpan={5} className="px-5 py-12 text-center text-slate-500 font-medium">
                       <FolderClosed className="h-8 w-8 text-white/10 mx-auto mb-2" />
                       No files loaded in this collection.
                     </td>

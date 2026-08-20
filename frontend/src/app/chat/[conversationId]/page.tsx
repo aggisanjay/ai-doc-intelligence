@@ -12,10 +12,8 @@ export default function ConversationPage() {
   const conversationId = params.conversationId as string;
 
   return (
-    <AppShell>
-      <div className="h-full -m-6">
-        <ChatInterface conversationId={conversationId} />
-      </div>
+    <AppShell noPadding>
+      <ChatInterface conversationId={conversationId} />
     </AppShell>
   );
 }

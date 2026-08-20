@@ -87,11 +87,11 @@ router.get('/dashboard', authenticate, async (req, res, next) => {
           const sources = msg.sources || [];
           sources.forEach(src => {
             // Count cited documents
-            const docName = src.document_name || src.documentName || 'Unknown';
+            const docName = src.document_name || 'Unknown';
             documentCitations[docName] = (documentCitations[docName] || 0) + 1;
 
             // Average relevance score
-            const score = parseFloat(src.relevance_score || src.relevanceScore || 0);
+            const score = parseFloat(src.relevance_score || 0);
             if (score > 0) {
               totalRelevanceScore += score;
               relevanceCount++;

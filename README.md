@@ -257,7 +257,7 @@ Document `status` lifecycle: `pending` → `processing` → `completed` / `faile
 #### SSE Streaming Format
 
 ```
-data: {"type":"sources","data":[{"documentName":"report.pdf","pageNumber":3,...}]}
+data: {"type":"sources","data":[{"document_name":"report.pdf","page_number":3,...}]}
 
 data: {"type":"content","data":"The quarterly revenue "}
 data: {"type":"content","data":"increased by 12%..."}

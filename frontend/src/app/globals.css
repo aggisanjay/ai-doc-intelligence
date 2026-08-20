@@ -4,96 +4,79 @@
 
 @layer base {
   :root {
-    --background: 240 24% 5%;       /* #0A0A0F */
-    --foreground: 0 0% 100%;        /* #FFFFFF */
+    --background: 0 0% 0%;             /* #000000 True Black */
+    --foreground: 210 40% 98%;         /* #f8fafc Off-White */
     
-    --card: 217 33% 14%;            /* #171F2E */
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 5%;                   /* #0d0d0d Dark Neutral Card */
+    --card-foreground: 210 40% 98%;
     
-    --popover: 223 47% 11%;         /* #111827 */
-    --popover-foreground: 0 0% 100%;
+    --popover: 0 0% 4%;                /* #0a0a0a */
+    --popover-foreground: 210 40% 98%;
     
-    --primary: 239 84% 67%;         /* #6366F1 */
+    --primary: 221.2 83.2% 53.3%;      /* #2563EB Blue Accent */
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 258 90% 66%;       /* #8B5CF6 */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 0 0% 12%;             /* #1f1f1f Neutral secondary */
+    --secondary-foreground: 210 40% 98%;
     
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 16% 65%; /* #94A3B8 */
+    --muted: 0 0% 10%;
+    --muted-foreground: 215 16% 65%;   /* #94a3b8 */
     
-    --accent: 189 94% 43%;          /* #06B6D4 */
-    --accent-foreground: 240 24% 5%;
+    --accent: 221.2 83.2% 53.3%;       /* #2563EB */
+    --accent-foreground: 0 0% 100%;
     
-    --destructive: 0 84% 60%;       /* #EF4444 */
+    --destructive: 0 84% 60%;          /* #ef4444 */
     --destructive-foreground: 0 0% 100%;
     
-    --border: 217 33% 18%;          /* rgba(255,255,255,0.08) approx */
-    --input: 217 33% 18%;
-    --ring: 239 84% 67%;
+    --border: 0 0% 100% / 0.08;        /* Hairline 1px rgba(255,255,255,0.08) */
+    --input: 0 0% 100% / 0.1;
+    --ring: 221.2 83.2% 53.3%;
     
-    --radius: 0.75rem;
+    --radius: 1rem;
   }
 }
 
 @layer base {
-  * { @apply border-border; }
+  * { 
+    @apply border-border; 
+  }
   body { 
-    @apply bg-background text-foreground antialiased selection:bg-indigo-500/30 selection:text-white;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.04) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.04) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, rgba(6, 182, 212, 0.03) 0px, transparent 50%);
-    background-attachment: fixed;
+    @apply bg-black text-slate-100 antialiased selection:bg-blue-600/30 selection:text-white font-sans;
+    background-color: #000000;
   }
 }
 
-/* Custom Scrollbar for premium feel */
+/* Custom Scrollbar for minimal feel */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
 }
 
-/* Custom visual utilities */
-.glass-card {
-  background: rgba(23, 31, 46, 0.45);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+/* Editorial Minimal Utilities */
+.editorial-card {
+  background-color: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
 }
 
-.glass-card-hover:hover {
-  background: rgba(23, 31, 46, 0.6);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-  transform: translateY(-2px);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+.editorial-card-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.editorial-card-hover:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
-.gradient-text {
-  @apply bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent;
-}
-
-.glow-border-active {
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
-  border-color: rgba(99, 102, 241, 0.4);
-}
-
-.framer-motion-card-enter {
-  opacity: 0;
-  transform: translateY(10px);
-}
-.framer-motion-card-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+.hairline-border {
+  border-color: rgba(255, 255, 255, 0.08);
 }

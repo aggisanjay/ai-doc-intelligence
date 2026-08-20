@@ -11,19 +11,17 @@ function ChatContent() {
   const collectionId = searchParams.get("collectionId") || undefined;
 
   return (
-    <div className="h-full -m-6">
-      <ChatInterface 
-        initialDocumentId={docId} 
-        initialCollectionId={collectionId} 
-        conversationId="new" 
-      />
-    </div>
+    <ChatInterface 
+      initialDocumentId={docId} 
+      initialCollectionId={collectionId} 
+      conversationId="new" 
+    />
   );
 }
 
 export default function NewChatPage() {
   return (
-    <AppShell>
+    <AppShell noPadding>
       <Suspense fallback={<div>Loading Chat...</div>}>
         <ChatContent />
       </Suspense>

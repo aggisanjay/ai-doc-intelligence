@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, FileText, X, CheckCircle2, AlertCircle, Loader2, Info } from "lucide-react";
+import { Upload, FileText, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface UploadFile {
@@ -59,35 +59,31 @@ export function UploadZone({ onUpload }: UploadZoneProps) {
       <div
         {...getRootProps()}
         className={cn(
-          "border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-300 relative overflow-hidden",
+          "border-2 border-dashed rounded-3xl p-12 text-center cursor-pointer transition-all duration-200 relative overflow-hidden bg-[#0c0c0e] shadow-lg",
           isDragActive 
-            ? "border-indigo-500 bg-indigo-500/5 glow-primary scale-[0.99]" 
-            : "border-white/10 hover:border-white/20 hover:bg-white/[0.01]"
+            ? "border-blue-500 bg-blue-950/10 scale-[0.99]" 
+            : "border-white/15 hover:border-blue-500/50 hover:bg-[#111116]"
         )}
       >
         <input {...getInputProps()} />
-        
-        {/* Glow circles */}
-        <div className="absolute top-[-50px] left-[-50px] w-32 h-32 rounded-full bg-indigo-500/5 blur-2xl pointer-events-none" />
-        <div className="absolute bottom-[-50px] right-[-50px] w-32 h-32 rounded-full bg-cyan-500/5 blur-2xl pointer-events-none" />
 
         <div className="relative z-10 space-y-4">
           <div className={cn(
-            "w-14 h-14 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-center mx-auto transition-colors",
-            isDragActive ? "text-indigo-400 border-indigo-500/30 bg-indigo-500/10" : "text-white/40"
+            "w-12 h-12 rounded-2xl border border-white/10 bg-[#121216] flex items-center justify-center mx-auto transition-colors text-blue-400 shadow-sm",
+            isDragActive ? "border-blue-500 text-blue-400 bg-blue-950/20" : ""
           )}>
-            <Upload className="h-6 w-6" />
+            <Upload className="h-5 w-5" />
           </div>
           
           {isDragActive ? (
             <div className="space-y-1">
-              <p className="text-indigo-400 text-sm font-semibold">Drop files to start processing</p>
-              <p className="text-white/45 text-xs">Maximum size limit 50MB</p>
+              <p className="text-white text-sm font-semibold">Drop files to start processing</p>
+              <p className="text-slate-400 text-xs">Maximum size limit 50MB</p>
             </div>
           ) : (
             <div className="space-y-1">
-              <p className="text-white/80 text-sm font-semibold">Drag & drop files here, or <span className="text-indigo-400 hover:text-indigo-300 transition-colors">browse local system</span></p>
-              <p className="text-white/40 text-xs">Supported file extensions: PDF, DOCX (Max 50MB)</p>
+              <p className="text-white text-sm font-semibold">Drag & drop files here, or <span className="text-blue-400 hover:text-blue-300 transition-colors">browse local files</span></p>
+              <p className="text-slate-400 text-xs">Supported file extensions: PDF, DOCX, TXT (Max 50MB)</p>
             </div>
           )}
         </div>
@@ -95,33 +91,33 @@ export function UploadZone({ onUpload }: UploadZoneProps) {
 
       {/* Uploading Progress Log */}
       {files.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2 pt-2">
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-bold text-white/50 uppercase tracking-wider">Upload Queue</span>
-            <span className="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-full font-medium">
+            <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Upload Queue</span>
+            <span className="text-[10px] bg-blue-500/10 text-blue-300 px-3 py-0.5 rounded-full font-bold border border-blue-500/20">
               {files.filter(f => f.status === "success").length}/{files.length} Done
             </span>
           </div>
 
           <div className="space-y-2">
             {files.map((uploadFile) => (
-              <div key={uploadFile.id} className="flex items-center gap-4 p-3 bg-[#171F2E]/30 border border-white/5 rounded-xl backdrop-blur-md">
-                <div className="w-8 h-8 rounded-lg bg-white/[0.03] flex items-center justify-center shrink-0 text-white/40">
+              <div key={uploadFile.id} className="flex items-center gap-4 p-4 bg-[#0c0c0e] border border-white/10 rounded-2xl shadow-sm">
+                <div className="w-9 h-9 rounded-xl border border-white/10 bg-[#121216] flex items-center justify-center shrink-0 text-blue-400">
                   <FileText className="h-4 w-4" />
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-xs font-semibold text-white truncate max-w-[200px] sm:max-w-md">{uploadFile.file.name}</p>
-                    <span className="text-[10px] font-mono text-white/30">
+                    <span className="text-[10px] font-mono text-slate-400">
                       {(uploadFile.file.size / (1024 * 1024)).toFixed(1)} MB
                     </span>
                   </div>
 
                   {uploadFile.status === "uploading" && (
-                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mt-1.5">
+                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-2">
                       <div 
-                        className="h-full bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full transition-all duration-300" 
+                        className="h-full bg-blue-600 rounded-full transition-all duration-300" 
                         style={{ width: `${uploadFile.progress}%` }} 
                       />
                     </div>
@@ -143,11 +139,11 @@ export function UploadZone({ onUpload }: UploadZoneProps) {
                 </div>
 
                 <div className="shrink-0 flex items-center gap-1">
-                  {uploadFile.status === "uploading" && <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />}
+                  {uploadFile.status === "uploading" && <Loader2 className="h-4 w-4 animate-spin text-blue-400" />}
                   {uploadFile.status === "success" && <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
                   {uploadFile.status === "error" && <AlertCircle className="h-4 w-4 text-rose-400" />}
                   {(uploadFile.status === "success" || uploadFile.status === "error") && (
-                    <button onClick={() => removeFile(uploadFile.id)} className="p-1 text-white/30 hover:text-white hover:bg-white/5 rounded transition-colors">
+                    <button onClick={() => removeFile(uploadFile.id)} className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors">
                       <X className="h-3.5 w-3.5" />
                     </button>
                   )}

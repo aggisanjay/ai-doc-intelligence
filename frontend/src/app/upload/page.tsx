@@ -16,30 +16,27 @@ export default function UploadPage() {
         
         {/* Header Title */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+          <div className="w-10 h-10 rounded-2xl border border-white/10 bg-[#0c0c0e] text-blue-400 flex items-center justify-center shadow-sm">
             <FolderUp className="h-5 w-5" />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-white">Upload Documents</h1>
-            <p className="text-white/40 text-xs mt-0.5">Ingest and parse local documents into the semantic knowledge base</p>
+            <p className="text-slate-400 text-xs mt-0.5">Ingest and parse local documents into the semantic knowledge base</p>
           </div>
         </div>
 
         {/* Upload Zone Card */}
-        <div className="bg-[#171F2E]/40 border border-white/5 rounded-2xl p-6 backdrop-blur-md relative overflow-hidden">
-          {/* Subtle background gradient splash */}
-          <div className="absolute top-0 right-0 w-44 h-44 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
-          
-          <h2 className="text-base font-semibold text-white mb-1">Ingest Files</h2>
-          <p className="text-xs text-white/45 mb-5">Uploaded files are split into page-aware text chunks and vectorized in real-time.</p>
+        <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl">
+          <h2 className="text-base font-bold text-white tracking-tight mb-1">Ingest Files</h2>
+          <p className="text-xs text-slate-400 mb-6">Uploaded files are split into page-aware text chunks and vectorized in real-time.</p>
           
           <UploadZone onUpload={uploadDocument} />
         </div>
 
         {/* Recent Uploads Table Card */}
-        <div className="bg-[#171F2E]/40 border border-white/5 rounded-2xl p-6 backdrop-blur-md relative overflow-hidden">
-          <h2 className="text-base font-semibold text-white mb-1">Recent uploads</h2>
-          <p className="text-xs text-white/45 mb-5">Monitor parse status and manage indexing of documents.</p>
+        <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl">
+          <h2 className="text-base font-bold text-white tracking-tight mb-1">Recent uploads</h2>
+          <p className="text-xs text-slate-400 mb-6">Monitor parse status and manage indexing of documents.</p>
           
           <DocumentList
             documents={documents}

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, Upload, MessageSquare, FileText, Plus, 
   ChevronRight, Trash2, Search, BarChart3, Settings, Database, Folder,
-  ChevronDown, Layers, Loader2, FolderClosed
+  ChevronDown, Layers, Loader2, FolderClosed, History
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { chatAPI, workspacesAPI } from "@/lib/api";
@@ -73,10 +73,10 @@ export function Sidebar() {
     loadCollections();
   }, [activeWorkspace, pathname]);
 
-  // Load Recent Conversations
+  // Load Recent Conversations (up to 30 items)
   useEffect(() => {
     chatAPI.listConversations()
-      .then((res) => setConversations(res.data.slice(0, 5)))
+      .then((res) => setConversations(res.data.slice(0, 30)))
       .catch(() => {});
   }, [pathname]);
 
@@ -128,59 +128,65 @@ export function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-[#111827] border-r border-white/5 flex flex-col h-full font-sans shrink-0">
+    <div className="w-64 bg-black border-r border-white/10 flex flex-col h-full font-sans shrink-0 overflow-hidden">
       
-      {/* Dynamic Workspace Switcher */}
-      <div className="p-4 border-b border-white/5 relative">
+      {/* Brand & Dynamic Workspace Switcher (Sticky Top) */}
+      <div className="p-4 border-b border-white/10 shrink-0 relative bg-black z-10">
+        <div className="mb-3 px-1">
+          <Link href="/" className="font-serif italic font-bold text-xl text-white tracking-tight hover:opacity-90">
+            DocAI
+          </Link>
+        </div>
+
         {isLoadingWorkspaces ? (
           <div className="flex items-center gap-2 py-2">
-            <Loader2 className="h-4 w-4 text-indigo-400 animate-spin" />
-            <span className="text-xs text-white/40">Loading Workspaces...</span>
+            <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+            <span className="text-xs text-slate-400">Loading Workspaces...</span>
           </div>
         ) : (
           <div>
             <button 
               onClick={() => setIsWsDropdownOpen(!isWsDropdownOpen)}
-              className="w-full flex items-center justify-between p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all"
+              className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-[#0c0c0e] border border-white/10 hover:border-white/20 transition-all shadow-sm"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white shrink-0 shadow-md">
-                  <Layers className="h-4 w-4" />
+                <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0 text-xs font-bold">
+                  <Layers className="h-3.5 w-3.5" />
                 </div>
                 <div className="text-left min-w-0">
-                  <span className="text-xs font-bold text-white block truncate leading-none">
+                  <span className="text-xs font-semibold text-white block truncate leading-none">
                     {activeWorkspace?.name || "Personal Workspace"}
                   </span>
-                  <span className="text-[9px] font-semibold text-indigo-400 uppercase tracking-wide mt-0.5 block">
+                  <span className="text-[9px] font-bold text-blue-400 uppercase tracking-wide mt-1 block">
                     Enterprise
                   </span>
                 </div>
               </div>
-              <ChevronDown className="h-3.5 w-3.5 text-white/40" />
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
             </button>
 
             {/* Switcher Dropdown */}
             {isWsDropdownOpen && (
-              <div className="absolute top-16 left-4 right-4 bg-[#171F2E] border border-white/10 rounded-xl shadow-xl z-50 p-1.5 space-y-0.5">
-                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest px-2 py-1">Switch Workspace</p>
+              <div className="absolute top-24 left-4 right-4 bg-[#0e0e12] border border-white/15 rounded-2xl shadow-2xl z-50 p-2 space-y-0.5">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2.5 py-1">Switch Workspace</p>
                 {workspaces.map((ws) => (
                   <button
                     key={ws.id}
                     onClick={() => handleSwitchWorkspace(ws)}
                     className={cn(
-                      "w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors block truncate",
+                      "w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-colors block truncate",
                       activeWorkspace?.id === ws.id 
-                        ? "bg-indigo-600/20 text-indigo-400" 
-                        : "text-white/60 hover:text-white hover:bg-white/[0.02]"
+                        ? "bg-blue-600/20 text-white font-semibold border border-blue-500/30" 
+                        : "text-slate-300 hover:text-white hover:bg-white/[0.06]"
                     )}
                   >
                     {ws.name}
                   </button>
                 ))}
-                <div className="border-t border-white/5 my-1" />
+                <div className="border-t border-white/10 my-1" />
                 <button
                   onClick={handleCreateWorkspace}
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold text-indigo-400 hover:text-indigo-300 hover:bg-white/[0.02] flex items-center gap-1.5"
+                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-blue-400 hover:text-blue-300 hover:bg-white/[0.04] flex items-center gap-1.5"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Create Workspace
@@ -191,133 +197,140 @@ export function Sidebar() {
         )}
       </div>
 
-      {/* Main Navigation */}
-      <nav className="p-3 space-y-1">
-        <p className="text-[9px] font-bold uppercase tracking-widest text-white/35 px-3 mb-1">Platform</p>
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.href} 
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group relative",
-                isActive 
-                  ? "bg-indigo-600/10 text-indigo-400" 
-                  : "text-white/60 hover:text-white hover:bg-white/[0.02]"
-              )}
-            >
-              {isActive && (
-                <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-indigo-500 rounded-r" />
-              )}
-              <item.icon className={cn("h-3.5 w-3.5 shrink-0 transition-colors", isActive ? "text-indigo-400" : "text-white/40 group-hover:text-white/70")} />
-              <span className="flex-1">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Collections Section */}
-      <div className="px-3 pt-2 pb-1 flex-1 flex flex-col overflow-hidden border-t border-white/5">
-        <div className="flex items-center justify-between px-3 mb-1.5">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-white/35">Collections</span>
-          <button 
-            onClick={handleCreateCollection}
-            className="p-1 hover:bg-white/5 rounded text-white/40 hover:text-white transition-colors"
-            title="Create Collection"
-          >
-            <Plus className="h-3 w-3" />
-          </button>
-        </div>
-
-        {/* Dynamic Collections List */}
-        <div className="overflow-y-auto max-h-48 space-y-0.5">
-          {collections.map((col) => {
-            const isColActive = pathname === `/collections/${col.id}`;
+      {/* Main Unified Scrollable Middle Body */}
+      <div className="flex-1 overflow-y-auto min-h-0 space-y-4 py-3">
+        
+        {/* Main Navigation */}
+        <nav className="px-3 space-y-1">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 px-3 mb-2">Platform</p>
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
             return (
               <Link
-                key={col.id}
-                href={`/collections/${col.id}`}
+                key={item.href} 
+                href={item.href}
                 className={cn(
-                  "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors",
-                  isColActive 
-                    ? "bg-white/5 text-white font-semibold" 
-                    : "text-white/50 hover:bg-white/[0.02] hover:text-white/80"
+                  "flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-medium transition-all group relative",
+                  isActive 
+                    ? "bg-white/[0.08] text-white font-semibold border border-white/10" 
+                    : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
                 )}
               >
-                <FolderClosed className="h-3.5 w-3.5 text-indigo-400/60 shrink-0" />
-                <span className="truncate flex-1">{col.name}</span>
-                {col._count?.documents > 0 && (
-                  <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/5 text-[9px] font-bold text-white/40 shrink-0">
-                    {col._count.documents}
-                  </span>
+                {isActive && (
+                  <span className="absolute left-1 top-2.5 bottom-2.5 w-1 bg-blue-500 rounded-full" />
                 )}
+                <item.icon className={cn("h-4 w-4 shrink-0 transition-colors", isActive ? "text-blue-400" : "text-slate-400 group-hover:text-slate-200")} />
+                <span className="flex-1">{item.label}</span>
               </Link>
             );
           })}
-          {collections.length === 0 && (
-            <p className="text-[10px] text-white/30 px-3 py-2">No collections created</p>
-          )}
-        </div>
+        </nav>
 
-        {/* Recent Conversations header */}
-        <div className="flex items-center justify-between px-3 mt-3 mb-1">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-white/35">Recent Chats</span>
-          <button 
-            onClick={() => setIsRecentCollapsed(!isRecentCollapsed)}
-            className="text-[9px] text-white/40 hover:text-white/70 px-1 font-semibold"
-          >
-            {isRecentCollapsed ? "Show" : "Hide"}
-          </button>
-        </div>
-
-        {/* Scrollable Conversation List */}
-        {!isRecentCollapsed && (
-          <div className="overflow-y-auto max-h-36 space-y-0.5">
-            {conversations.map((conv) => {
-              const isChatActive = pathname === `/chat/${conv.id}`;
+        {/* Folders & Collections Section */}
+        <div className="px-3 pt-2 border-t border-white/10">
+          <div className="flex items-center justify-between px-3 mb-2">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Collections</p>
+            <button 
+              onClick={handleCreateCollection} 
+              className="text-slate-400 hover:text-blue-400 p-0.5 rounded transition-colors"
+              title="Create Collection"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          
+          <div className="space-y-0.5">
+            {collections.map((col) => {
+              const isColActive = pathname === `/collections/${col.id}`;
               return (
                 <Link
-                  key={conv.id} 
-                  href={`/chat/${conv.id}`}
+                  key={col.id}
+                  href={`/collections/${col.id}`}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors group relative",
-                    isChatActive 
-                      ? "bg-white/5 text-white font-medium" 
-                      : "text-white/50 hover:bg-white/[0.02] hover:text-white/80"
+                    "flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors group",
+                    isColActive ? "bg-white/[0.08] text-white" : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
                   )}
                 >
-                  <MessageSquare className="h-3.5 w-3.5 shrink-0 text-white/30" />
-                  <span className="truncate flex-1 pr-6">{conv.title}</span>
-                  <button
-                    onClick={(e) => handleDelete(e, conv.id)}
-                    className="p-1 rounded hover:bg-white/10 text-white/35 hover:text-rose-450 absolute right-2 opacity-0 group-hover:opacity-100 transition-all"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FolderClosed className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                    <span className="truncate">{col.name}</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 px-1.5 py-0.5 rounded-full bg-white/[0.04] border border-white/10">
+                    {col.documents?.length || 0}
+                  </span>
                 </Link>
               );
             })}
-            {conversations.length === 0 && (
-              <p className="text-[10px] text-white/30 px-3 py-2">No recent sessions</p>
+            {collections.length === 0 && (
+              <p className="text-[10px] text-slate-500 px-3 py-1 italic">No collections yet</p>
             )}
           </div>
-        )}
+        </div>
+
+        {/* Recent Chats History Section */}
+        <div className="px-3 pt-2 border-t border-white/10">
+          <div className="flex items-center justify-between px-3 mb-2">
+            <div className="flex items-center gap-1.5">
+              <History className="h-3 w-3 text-blue-400" />
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Chat History</p>
+            </div>
+            <button 
+              onClick={() => setIsRecentCollapsed(!isRecentCollapsed)}
+              className="text-[9px] font-semibold text-slate-400 hover:text-white transition-colors"
+            >
+              {isRecentCollapsed ? "Show" : "Hide"}
+            </button>
+          </div>
+
+          {!isRecentCollapsed && (
+            <div className="space-y-1">
+              {conversations.map((conv) => {
+                const isChatActive = pathname === `/chat/${conv.id}`;
+                return (
+                  <div
+                    key={conv.id}
+                    className={cn(
+                      "flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors group relative",
+                      isChatActive ? "bg-blue-600/15 text-white border border-blue-500/30" : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                    )}
+                  >
+                    <Link href={`/chat/${conv.id}`} className="flex items-center gap-2 min-w-0 flex-1 truncate">
+                      <MessageSquare className={cn("h-3 w-3 shrink-0", isChatActive ? "text-blue-400" : "text-slate-500")} />
+                      <span className="truncate">{conv.title || "Untitled query"}</span>
+                    </Link>
+                    <button
+                      onClick={(e) => handleDelete(e, conv.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-rose-400 rounded transition-all"
+                      title="Delete conversation"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
+              {conversations.length === 0 && (
+                <p className="text-[10px] text-slate-500 px-3 py-1 italic">No chat history found</p>
+              )}
+            </div>
+          )}
+        </div>
+
       </div>
 
-      {/* Footer Details */}
-      <div className="p-4 border-t border-white/5 bg-[#0C121D] flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-indigo-500 flex items-center justify-center shrink-0">
-          <Database className="h-3.5 w-3.5 text-white" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold text-white/70 truncate">Secure Sandbox</p>
-          <div className="flex items-center gap-1 mt-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <p className="text-[9px] font-bold text-white/40 uppercase tracking-wide">Sync: Online</p>
+      {/* Engine Status Bottom Panel (Sticky Bottom) */}
+      <div className="p-3 border-t border-white/10 bg-[#0c0c0e] shrink-0">
+        <div className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-black/60 border border-white/10 text-xs shadow-sm">
+          <Database className="h-4 w-4 text-blue-400 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="font-semibold text-white block text-[11px] truncate">DocAI Engine</span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Sync: Online</span>
+            </div>
           </div>
         </div>
       </div>
+
     </div>
   );
 }

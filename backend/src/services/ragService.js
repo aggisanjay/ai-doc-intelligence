@@ -149,4 +149,4 @@ async function deleteConversation(conversationId, userId) {
   });
 }
 
-module.exports = { query, streamingResponse, getConversations, getConversation, deleteConversation };
+module.exports = { query, streamingResponse, getConversations, getConversation, deleteConversation, buildCitations };

@@ -19,7 +19,7 @@ interface DocumentListProps {
 
 const statusConfig = {
   pending:    { icon: Clock,        color: "bg-amber-500/10 text-amber-400 border-amber-500/20", label: "Pending", spin: false },
-  processing: { icon: Loader2,      color: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20", label: "Processing", spin: true },
+  processing: { icon: Loader2,      color: "bg-blue-500/10 text-blue-400 border-blue-500/20", label: "Processing", spin: true },
   completed:  { icon: CheckCircle2,  color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", label: "Ready", spin: false },
   failed:     { icon: AlertCircle,   color: "bg-rose-500/10 text-rose-400 border-rose-500/20", label: "Failed", spin: false },
 };
@@ -30,7 +30,6 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// Generate tags and health score dynamically based on file metadata
 function getDocMetadata(doc: Document) {
   const filenameLower = doc.original_filename.toLowerCase();
   const tags: string[] = [];
@@ -47,7 +46,6 @@ function getDocMetadata(doc: Document) {
     tags.push("Research", "General");
   }
 
-  // Deterministic health score between 88 and 99
   const scoreBase = doc.id.charCodeAt(doc.id.length - 1) || 90;
   const healthScore = 88 + (scoreBase % 12);
   
@@ -71,28 +69,28 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
 
   if (isLoading && documents.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 bg-white/[0.01] border border-white/5 rounded-2xl">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-        <span className="mt-3 text-sm text-white/50">Fetching documents from cluster...</span>
+      <div className="flex flex-col items-center justify-center py-20 bg-black/40 border border-white/10 rounded-2xl">
+        <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+        <span className="mt-3 text-xs text-slate-400">Fetching documents from cluster...</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 font-sans">
       {/* Table Actions Header */}
       <div className="flex flex-col sm:flex-row gap-3 items-center justify-between pb-2">
         {/* Status filter tabs */}
-        <div className="flex bg-white/[0.03] border border-white/5 p-1 rounded-xl w-full sm:w-auto">
+        <div className="flex bg-black/60 border border-white/10 p-1 rounded-full w-full sm:w-auto">
           {(["all", "completed", "processing", "failed"] as const).map((filter) => (
             <button
               key={filter}
               onClick={() => setStatusFilter(filter)}
               className={cn(
-                "px-3 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all",
+                "px-4 py-1.5 text-xs font-semibold rounded-full capitalize transition-all",
                 statusFilter === filter 
-                  ? "bg-white/10 text-white" 
-                  : "text-white/40 hover:text-white/60"
+                  ? "bg-blue-600 text-white shadow-sm" 
+                  : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
               )}
             >
               {filter === "completed" ? "ready" : filter}
@@ -102,51 +100,53 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
 
         {/* Local Search Input */}
         <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Filter list by filename..."
-            className="w-full pl-10 pr-4 py-2 bg-white/[0.02] border border-white/5 rounded-xl text-xs placeholder:text-white/20 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.04] transition-all"
+            placeholder="Filter by filename..."
+            className="w-full pl-9 pr-4 py-2 bg-black/60 border border-white/10 rounded-full text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 transition-all"
           />
         </div>
       </div>
 
       {/* Main Table */}
-      <div className="border border-white/5 bg-[#171F2E]/40 rounded-2xl overflow-hidden backdrop-blur-md">
+      <div className="border border-white/10 bg-black/40 rounded-2xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-white/5 bg-white/[0.02] text-[11px] font-semibold uppercase tracking-wider text-white/45">
-                <th className="px-5 py-3.5 font-medium">Document Name</th>
-                <th className="px-5 py-3.5 font-medium">Status</th>
-                <th className="px-5 py-3.5 font-medium hidden md:table-cell">Health</th>
-                <th className="px-5 py-3.5 font-medium hidden lg:table-cell">Category Tags</th>
-                <th className="px-5 py-3.5 font-medium">Size</th>
-                <th className="px-5 py-3.5 font-medium hidden sm:table-cell">Details</th>
-                <th className="px-5 py-3.5 font-medium text-right">Actions</th>
+              <tr className="border-b border-white/10 bg-white/[0.02] text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5">Document Name</th>
+                <th className="px-5 py-3.5">Status</th>
+                <th className="px-5 py-3.5 hidden md:table-cell">Health</th>
+                <th className="px-5 py-3.5 hidden lg:table-cell">Category Tags</th>
+                <th className="px-5 py-3.5">Size</th>
+                <th className="px-5 py-3.5 hidden sm:table-cell">Details</th>
+                <th className="px-5 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-xs text-white/80">
+            <tbody className="divide-y divide-white/10 text-xs text-slate-300">
               {filteredDocs.map((doc) => {
                 const { tags, healthScore } = getDocMetadata(doc);
                 const status = statusConfig[doc.status] || statusConfig.pending;
                 const StatusIcon = status.icon;
 
                 return (
-                  <tr key={doc.id} className="hover:bg-white/[0.01] transition-colors group">
+                  <tr key={doc.id} className="hover:bg-white/[0.03] transition-colors group">
                     {/* Name */}
                     <td className="px-5 py-4 font-medium max-w-[200px] sm:max-w-xs truncate">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0 text-indigo-400 group-hover:scale-105 transition-transform">
-                          <FileText className="h-4 w-4" />
+                        <div className="w-8 h-8 rounded-xl border border-white/10 bg-white/[0.04] flex items-center justify-center shrink-0 text-white group-hover:border-blue-500/40 transition-colors">
+                          <FileText className="h-4 w-4 text-blue-400" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-semibold text-white truncate group-hover:text-indigo-300 transition-colors" title={doc.original_filename}>
-                            {doc.original_filename}
-                          </p>
-                          <p className="text-[10px] text-white/35 mt-0.5 uppercase tracking-wide">
+                          <Link href={`/documents/${doc.id}`}>
+                            <p className="font-semibold text-white truncate group-hover:text-blue-400 transition-colors" title={doc.original_filename}>
+                              {doc.original_filename}
+                            </p>
+                          </Link>
+                          <p className="text-[10px] text-slate-500 mt-0.5">
                             {formatDistanceToNow(new Date(doc.created_at), { addSuffix: true })}
                           </p>
                         </div>
@@ -156,7 +156,7 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
                     {/* Status */}
                     <td className="px-5 py-4">
                       <span className={cn(
-                        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border",
+                        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium border",
                         status.color
                       )}>
                         <StatusIcon className={cn("h-3 w-3", status.spin ? "animate-spin" : "")} />
@@ -173,7 +173,7 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
                         )}>
                           {healthScore}%
                         </span>
-                        <div className="w-12 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="w-12 h-1.5 bg-white/10 rounded-full overflow-hidden">
                           <div 
                             className={cn(
                               "h-full rounded-full",
@@ -189,7 +189,7 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
                     <td className="px-5 py-4 hidden lg:table-cell">
                       <div className="flex flex-wrap gap-1">
                         {tags.map((tag) => (
-                          <span key={tag} className="px-1.5 py-0.5 rounded bg-white/5 border border-white/5 text-[9px] font-semibold text-white/60">
+                          <span key={tag} className="px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/10 text-[9px] font-medium text-slate-300">
                             {tag}
                           </span>
                         ))}
@@ -197,16 +197,16 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
                     </td>
 
                     {/* Size */}
-                    <td className="px-5 py-4 font-mono text-white/60">
+                    <td className="px-5 py-4 font-mono text-slate-400">
                       {formatFileSize(doc.file_size)}
                     </td>
 
                     {/* Details Pages/Chunks */}
-                    <td className="px-5 py-4 text-white/60 hidden sm:table-cell">
+                    <td className="px-5 py-4 text-slate-400 hidden sm:table-cell">
                       {doc.status === "completed" ? (
                         <span>{doc.page_count} pgs • {doc.chunk_count} chunks</span>
                       ) : (
-                        <span className="text-white/20">—</span>
+                        <span className="text-slate-600">—</span>
                       )}
                     </td>
 
@@ -215,8 +215,8 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
                       <div className="flex items-center justify-end gap-1.5">
                         {doc.status === "completed" && (
                           <Link href={`/chat/new?doc=${doc.id}`} title="Ask AI about document">
-                            <button className="p-1.5 text-white/40 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors">
-                              <MessageSquare className="h-4 w-4" />
+                            <button className="p-2 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-full transition-colors">
+                              <MessageSquare className="h-4 w-4 text-blue-400" />
                             </button>
                           </Link>
                         )}
@@ -224,7 +224,7 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
                           <button 
                             onClick={() => onReprocess(doc.id)} 
                             title="Retry Processing"
-                            className="p-1.5 text-white/40 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
+                            className="p-2 text-slate-400 hover:text-amber-400 hover:bg-white/[0.08] rounded-full transition-colors"
                           >
                             <RefreshCw className="h-4 w-4" />
                           </button>
@@ -232,7 +232,7 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
                         <button 
                           onClick={() => onDelete(doc.id)} 
                           title="Delete Document"
-                          className="p-1.5 text-white/40 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                          className="p-2 text-slate-400 hover:text-rose-400 hover:bg-white/[0.08] rounded-full transition-colors"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -243,7 +243,7 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
               })}
               {filteredDocs.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-white/30 font-medium">
+                  <td colSpan={7} className="px-5 py-12 text-center text-slate-500 font-medium">
                     <FileText className="h-8 w-8 text-white/10 mx-auto mb-2" />
                     No documents found matching criteria
                   </td>

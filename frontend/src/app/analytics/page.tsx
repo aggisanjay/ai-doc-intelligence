@@ -65,9 +65,9 @@ ${data.popularQuestions.map((q: any) => `- "${q.question}" (${q.count} calls)`).
   if (isLoading) {
     return (
       <AppShell>
-        <div className="flex flex-col items-center justify-center py-24 bg-white/[0.01] border border-white/5 rounded-2xl animate-pulse max-w-7xl mx-auto font-sans">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-          <span className="mt-3 text-xs font-semibold text-indigo-400 uppercase tracking-wider">Syncing Workspace Metrics</span>
+        <div className="flex flex-col items-center justify-center py-24 bg-[#0c0c0e] border border-white/10 rounded-3xl animate-pulse max-w-7xl mx-auto font-sans shadow-lg">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+          <span className="mt-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Syncing Workspace Metrics</span>
         </div>
       </AppShell>
     );
@@ -77,12 +77,12 @@ ${data.popularQuestions.map((q: any) => `- "${q.question}" (${q.count} calls)`).
     return (
       <AppShell>
         <div className="max-w-xl mx-auto text-center py-20 space-y-4 font-sans">
-          <AlertCircle className="h-12 w-12 text-rose-400 mx-auto" />
+          <AlertCircle className="h-10 w-10 text-rose-400 mx-auto" />
           <h2 className="text-xl font-bold text-white">Analytics Pipeline Offline</h2>
-          <p className="text-xs text-white/40">{error || "Unable to load analytics calculations."}</p>
+          <p className="text-xs text-slate-400">{error || "Unable to load analytics calculations."}</p>
           <button 
             onClick={loadAnalytics}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-semibold text-white transition-colors"
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-full text-xs font-semibold text-white transition-colors shadow-sm"
           >
             Retry Connection
           </button>
@@ -92,14 +92,13 @@ ${data.popularQuestions.map((q: any) => `- "${q.question}" (${q.count} calls)`).
   }
 
   const statCards = [
-    { title: "Processed Files", value: `${data.documentsProcessed} / ${data.totalDocuments}`, sub: `${data.totalPages} total page frames`, icon: FileText, color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20" },
-    { title: "Total Queries", value: data.totalQueries, sub: "Context-scoped chat messages", icon: MessageSquare, color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20" },
-    { title: "Vector Memory Space", value: `${data.storageMB} MB`, sub: "Indexed sentence transformers", icon: Database, color: "text-purple-400 bg-purple-500/10 border-purple-500/20" },
-    { title: "Retrieval Match Score", value: `${data.averageRetrievalQuality}%`, sub: "Average cosine similarity vector matching", icon: TrendingUp, color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" }
+    { title: "Processed Files", value: `${data.documentsProcessed} / ${data.totalDocuments}`, sub: `${data.totalPages} total page frames`, icon: FileText },
+    { title: "Total Queries", value: data.totalQueries, sub: "Context-scoped chat messages", icon: MessageSquare },
+    { title: "Vector Memory Space", value: `${data.storageMB} MB`, sub: "Indexed sentence transformers", icon: Database },
+    { title: "Retrieval Match Score", value: `${data.averageRetrievalQuality}%`, sub: "Average cosine similarity vector matching", icon: TrendingUp }
   ];
 
-  // Colors for Pie chart
-  const COLORS = ["#6366F1", "#06B6D4", "#8B5CF6", "#10B981"];
+  const COLORS = ["#2563EB", "#60a5fa", "#93c5fd", "#e2e8f0"];
 
   return (
     <AppShell>
@@ -108,34 +107,34 @@ ${data.popularQuestions.map((q: any) => `- "${q.question}" (${q.count} calls)`).
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/15 text-indigo-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl border border-white/10 bg-[#0c0c0e] text-blue-400 flex items-center justify-center shadow-sm">
               <BarChart3 className="h-5 w-5" />
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-white">System Analytics</h1>
-              <p className="text-white/40 text-xs mt-0.5">Real-time metrics on vector clusters, query volumes, and ingestion ratios</p>
+              <p className="text-slate-400 text-xs mt-0.5">Real-time metrics on vector clusters, query volumes, and ingestion ratios</p>
             </div>
           </div>
 
           <button 
             onClick={downloadReport}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 rounded-xl text-xs font-semibold transition-colors shrink-0"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 rounded-full text-xs font-semibold text-white transition-colors shrink-0 shadow-sm"
           >
-            <Download className="h-4 w-4" /> Download Executive Report
+            <Download className="h-3.5 w-3.5 text-blue-400" /> Download Executive Report
           </button>
         </div>
 
         {/* mini stats cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map((card, idx) => (
-            <div key={idx} className="bg-[#171F2E]/40 border border-white/5 rounded-2xl p-5 backdrop-blur-md flex items-start justify-between">
+            <div key={idx} className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6 flex items-start justify-between hover:border-white/20 hover:bg-[#111116] transition-all shadow-md">
               <div className="space-y-1">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">{card.title}</p>
-                <h3 className="text-2xl font-extrabold text-white tracking-tight">{card.value}</h3>
-                <p className="text-[10px] text-white/35 font-medium">{card.sub}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{card.title}</p>
+                <h3 className="text-2xl font-bold text-white tracking-tight">{card.value}</h3>
+                <p className="text-[10px] text-slate-400 font-medium">{card.sub}</p>
               </div>
-              <div className={cn("p-2.5 rounded-xl border shrink-0", card.color)}>
-                <card.icon className="h-4.5 w-4.5" />
+              <div className="p-2.5 rounded-xl border border-white/10 bg-white/[0.04] text-blue-400 shrink-0">
+                <card.icon className="h-4 w-4" />
               </div>
             </div>
           ))}
@@ -145,43 +144,43 @@ ${data.popularQuestions.map((q: any) => `- "${q.question}" (${q.count} calls)`).
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Chart 1: Request volumes */}
-          <div className="bg-[#171F2E]/40 border border-white/5 rounded-2xl p-5 backdrop-blur-md space-y-4">
+          <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6 space-y-4 shadow-lg">
             <div>
               <h3 className="text-sm font-bold text-white">Daily Requests</h3>
-              <p className="text-[10px] text-white/40">Query volume versus semantic cache responses</p>
+              <p className="text-[11px] text-slate-400">Query volume versus semantic cache responses</p>
             </div>
             <div className="h-72 w-full text-xs">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={data.usageTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="queriesGlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366F1" stopOpacity={0.25}/>
-                      <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#2563EB" stopOpacity={0.35}/>
+                      <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="cacheGlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.25}/>
-                      <stop offset="95%" stopColor="#06B6D4" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="#60a5fa" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                  <XAxis dataKey="day" stroke="rgba(255,255,255,0.3)" />
-                  <YAxis stroke="rgba(255,255,255,0.3)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                  <XAxis dataKey="day" stroke="rgba(255,255,255,0.4)" />
+                  <YAxis stroke="rgba(255,255,255,0.4)" />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: "#171F2E", borderColor: "rgba(255,255,255,0.1)", borderRadius: "12px", color: "white" }}
+                    contentStyle={{ backgroundColor: "#0c0c0e", borderColor: "rgba(255,255,255,0.15)", borderRadius: "16px", color: "white" }}
                   />
                   <Legend verticalAlign="top" height={36} />
-                  <Area type="monotone" name="Total Queries" dataKey="queries" stroke="#6366F1" strokeWidth={2} fillOpacity={1} fill="url(#queriesGlow)" />
-                  <Area type="monotone" name="Cache Hits" dataKey="cacheHits" stroke="#06B6D4" strokeWidth={2} fillOpacity={1} fill="url(#cacheGlow)" />
+                  <Area type="monotone" name="Total Queries" dataKey="queries" stroke="#2563EB" strokeWidth={2} fillOpacity={1} fill="url(#queriesGlow)" />
+                  <Area type="monotone" name="Cache Hits" dataKey="cacheHits" stroke="#60a5fa" strokeWidth={1.5} fillOpacity={1} fill="url(#cacheGlow)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Chart 2: Category distribution */}
-          <div className="bg-[#171F2E]/40 border border-white/5 rounded-2xl p-5 backdrop-blur-md space-y-4">
+          <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6 space-y-4 shadow-lg">
             <div>
               <h3 className="text-sm font-bold text-white">Searched Topic Spread</h3>
-              <p className="text-[10px] text-white/40">Distribution of query domains computed from text keyword analysis</p>
+              <p className="text-[11px] text-slate-400">Distribution of query domains computed from keyword analysis</p>
             </div>
             <div className="h-72 w-full flex flex-col sm:flex-row items-center justify-center">
               <div className="w-full sm:w-[60%] h-56">
@@ -202,7 +201,7 @@ ${data.popularQuestions.map((q: any) => `- "${q.question}" (${q.count} calls)`).
                       ))}
                     </Pie>
                     <Tooltip 
-                      contentStyle={{ backgroundColor: "#171F2E", borderColor: "rgba(255,255,255,0.1)", borderRadius: "12px", color: "white" }}
+                      contentStyle={{ backgroundColor: "#0c0c0e", borderColor: "rgba(255,255,255,0.15)", borderRadius: "16px", color: "white" }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -213,7 +212,7 @@ ${data.popularQuestions.map((q: any) => `- "${q.question}" (${q.count} calls)`).
                 {data.mostSearchedTopics.map((item: any, idx: number) => (
                   <div key={idx} className="flex items-center gap-2 text-xs">
                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
-                    <span className="text-white/60 truncate">{item.topic}</span>
+                    <span className="text-slate-300 truncate">{item.topic}</span>
                     <span className="text-white font-bold ml-auto">{item.count}</span>
                   </div>
                 ))}
@@ -227,60 +226,56 @@ ${data.popularQuestions.map((q: any) => `- "${q.question}" (${q.count} calls)`).
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Section 1: Most Cited Documents */}
-          <div className="bg-[#171F2E]/35 border border-white/5 rounded-2xl p-5 space-y-4">
-            <h3 className="text-xs font-bold text-white/80 uppercase tracking-widest border-b border-white/5 pb-2">Most Referenced Documents</h3>
+          <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6 space-y-4 shadow-lg">
+            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest border-b border-white/10 pb-3">Most Referenced Documents</h3>
             <div className="space-y-3">
               {data.mostReferencedDocuments.map((doc: any, i: number) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-white/[0.01] border border-white/5 rounded-xl">
+                <div key={i} className="flex items-center justify-between p-3.5 bg-black/50 border border-white/10 rounded-2xl">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <FileText className="h-4 w-4 text-indigo-400 shrink-0" />
-                    <span className="text-xs text-white font-semibold truncate max-w-[150px]">{doc.filename}</span>
+                    <FileText className="h-4 w-4 text-blue-400 shrink-0" />
+                    <span className="text-xs text-white font-medium truncate max-w-[150px]">{doc.filename}</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-bold text-indigo-400">
-                    {doc.count} references
+                  <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-400">
+                    {doc.count} citations
                   </span>
                 </div>
               ))}
               {data.mostReferencedDocuments.length === 0 && (
-                <p className="text-[10px] text-white/30 italic text-center py-6">No references cited yet.</p>
+                <p className="text-xs text-slate-500 italic text-center py-6">No references cited yet.</p>
               )}
             </div>
           </div>
 
           {/* Section 2: Popular Questions */}
-          <div className="bg-[#171F2E]/35 border border-white/5 rounded-2xl p-5 space-y-4">
-            <h3 className="text-xs font-bold text-white/80 uppercase tracking-widest border-b border-white/5 pb-2">Popular Questions</h3>
+          <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6 space-y-4 shadow-lg">
+            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest border-b border-white/10 pb-3">Popular Questions</h3>
             <div className="space-y-3">
               {data.popularQuestions.map((q: any, i: number) => (
-                <div key={i} className="p-3 bg-white/[0.01] border border-white/5 rounded-xl space-y-1">
-                  <p className="text-xs font-semibold text-white/80 line-clamp-1">"{q.question}"</p>
-                  <p className="text-[9px] text-indigo-400 font-bold uppercase tracking-wider">{q.count} calls in cluster</p>
+                <div key={i} className="p-3.5 bg-black/50 border border-white/10 rounded-2xl space-y-1">
+                  <p className="text-xs font-medium text-white line-clamp-1">"{q.question}"</p>
+                  <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">{q.count} calls in cluster</p>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Section 3: Recent Activity Feed */}
-          <div className="bg-[#171F2E]/35 border border-white/5 rounded-2xl p-5 space-y-4">
-            <h3 className="text-xs font-bold text-white/80 uppercase tracking-widest border-b border-white/5 pb-2">Recent Workspace Activity</h3>
+          <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6 space-y-4 shadow-lg">
+            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest border-b border-white/10 pb-3">Recent Activity</h3>
             <div className="space-y-3 overflow-y-auto max-h-64 pr-1">
               {data.recentActivity.map((act: any, i: number) => (
-                <div key={i} className="flex gap-2.5 text-[11px] leading-relaxed">
-                  <div className="pt-0.5">
-                    {act.type === 'upload' ? (
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                    ) : (
-                      <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                    )}
+                <div key={i} className="flex gap-2.5 text-xs leading-relaxed">
+                  <div className="pt-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
                   </div>
                   <div className="space-y-0.5">
-                    <p className="text-white/70 font-medium">{act.description}</p>
-                    <p className="text-[9px] text-white/30">{formatDistanceToNow(new Date(act.timestamp), { addSuffix: true })}</p>
+                    <p className="text-slate-300 font-medium">{act.description}</p>
+                    <p className="text-[10px] text-slate-500">{formatDistanceToNow(new Date(act.timestamp), { addSuffix: true })}</p>
                   </div>
                 </div>
               ))}
               {data.recentActivity.length === 0 && (
-                <p className="text-[10px] text-white/30 italic text-center py-6">No workspace records.</p>
+                <p className="text-xs text-slate-500 italic text-center py-6">No workspace records.</p>
               )}
             </div>
           </div>

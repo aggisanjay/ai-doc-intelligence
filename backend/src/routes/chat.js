@@ -2,6 +2,7 @@
 const { Router } = require('express');
 const { authenticate } = require('../middleware/auth');
 const ragService = require('../services/ragService');
+const { buildCitations } = require('../services/ragService');
 
 const router = Router();
 
@@ -56,13 +57,6 @@ async function prepareStreamArgs({ query, documentIds, conversationId }, user) {
 
   const chatHistory = conversation?.messages || [];
   const chunks = await retriever.retrieve(query, user.id, documentIds);
-
-  const buildCitations = (cs) => cs.map(c => ({
-    documentName: c.metadata?.sourceFile || 'Unknown',
-    pageNumber: c.metadata?.pageNumber || null,
-    chunkText: c.text.length > 300 ? c.text.slice(0, 300) + '...' : c.text,
-    relevanceScore: Math.round(c.score * 1000) / 1000,
-  }));
 
   return {
     request: { query, documentIds, conversationId },

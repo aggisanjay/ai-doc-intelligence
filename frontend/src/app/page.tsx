@@ -2,27 +2,38 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  FileText, ArrowRight, CheckCircle2, Shield, Zap, Sparkles, 
-  MessageSquare, Search, BarChart3, Database, Globe, Lock, Cpu,
-  ChevronDown, HelpCircle, Users, Code, BookOpen, Layers, Briefcase, Upload, X
+  FileText, ArrowRight, Check, Shield, Zap, 
+  MessageSquare, Search, ChevronDown, Users, 
+  Upload, CornerUpRight, Sparkles, X, Menu,
+  Lock, Globe, FileCheck, Layers, ExternalLink,
+  ChevronRight, Twitter, Instagram, Linkedin, Youtube
 } from "lucide-react";
 import { SignIn, SignUp, useUser } from "@clerk/nextjs";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState("engineering");
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  
+  // Navigation & Dropdown State
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [resourcesOpen, setResourcesOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
   // Auth Modal State
   const [authModal, setAuthModal] = useState<"signin" | "signup" | null>(null);
-  
+
   // Clerk Sync logic
   const { user: clerkUser, isSignedIn, isLoaded } = useUser();
   const { clerkSync } = useAuth();
   const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     if (isLoaded && isSignedIn && clerkUser) {
@@ -42,668 +53,1465 @@ export default function LandingPage() {
     }
   }, [isLoaded, isSignedIn, clerkUser, isSyncing, clerkSync]);
 
-  // Interactive Simulation State
-  const [simStep, setSimStep] = useState(0);
-  const [simText, setSimText] = useState("");
-  const [simResponse, setSimResponse] = useState("");
-  const [simCitations, setSimCitations] = useState<any[]>([]);
-  const [isSimulating, setIsSimulating] = useState(false);
-
-  // Auto-run simulation on interval
-  useEffect(() => {
-    if (isSimulating) return;
-    const interval = setTimeout(() => {
-      runSimulation();
-    }, 4000);
-    return () => clearTimeout(interval);
-  }, [simStep, isSimulating]);
-
-  const runSimulation = async () => {
-    setIsSimulating(true);
-    setSimStep(0);
-    setSimText("");
-    setSimResponse("");
-    setSimCitations([]);
-
-    // 1. Uploading
-    await new Promise(r => setTimeout(r, 1200));
-    setSimStep(1); // Uploaded api_spec.pdf
-
-    // 2. Querying
-    await new Promise(r => setTimeout(r, 1500));
-    setSimStep(2); // Typing query...
-    const query = "What is the rate limit for the GET /users endpoint?";
-    for (let i = 0; i <= query.length; i++) {
-      setSimText(query.slice(0, i));
-      await new Promise(r => setTimeout(r, 40));
-    }
-
-    // 3. Retrieval
-    await new Promise(r => setTimeout(r, 800));
-    setSimStep(3); // Matching chunks...
-    setSimCitations([
-      { file: "api_spec.pdf", page: 12, score: 0.94 },
-      { file: "dev_guide.docx", page: 4, score: 0.81 }
-    ]);
-
-    // 4. Streaming response
-    await new Promise(r => setTimeout(r, 1000));
-    setSimStep(4); // Generating...
-    const response = "Based on page 12 of api_spec.pdf, the rate limit for the GET /users endpoint is 100 requests per minute per API key. If this limit is exceeded, the API returns a 429 Too Many Requests status code.";
-    for (let i = 0; i <= response.length; i++) {
-      setSimResponse(response.slice(0, i));
-      await new Promise(r => setTimeout(r, 15));
-    }
-
-    setIsSimulating(false);
-  };
-
-  const useCases = {
-    engineering: {
-      title: "Engineering Teams",
-      icon: Code,
-      bullets: [
-        "Search dense technical specifications and system guidelines instantly.",
-        "Retrieve API schemas and environment parameters without digging.",
-        "Onboard new hires by searching legacy codebase architectures."
-      ],
-      tag: "12x Developer Velocity"
-    },
-    research: {
-      title: "Research & Development",
-      icon: BookOpen,
-      bullets: [
-        "Ingest and query hundreds of academic journals and clinical studies.",
-        "Extract findings, compare methodologies, and uncover hidden patterns.",
-        "Compile cross-referenced literature reviews in seconds."
-      ],
-      tag: "80% Time Saved"
-    },
-    product: {
-      title: "Product Teams",
-      icon: Layers,
-      bullets: [
-        "Synthesize client feedback documents, PRDs, and user requests.",
-        "Align teams on product guidelines, features, and release criteria.",
-        "Instantly search competitive teardowns and customer surveys."
-      ],
-      tag: "Accelerated Product Discovery"
-    },
-    operations: {
-      title: "Operations & HR",
-      icon: Briefcase,
-      bullets: [
-        "Query standard operating procedures (SOPs) and compliance guidelines.",
-        "Provide immediate answers for HR policy and insurance document queries.",
-        "Track updates across business policies and training records."
-      ],
-      tag: "Zero Operational Lag"
+  const openAuth = (type: "signin" | "signup") => {
+    if (isSignedIn) {
+      window.location.href = "/dashboard";
+    } else {
+      setAuthModal(type);
     }
   };
-
-  const faqs = [
-    { q: "How does the AI verify its answers?", a: "Every answer generated by the platform contains direct click-to-view citations referencing the source document and page number. If the answer cannot be found in the workspace, the AI will state that it has insufficient context to prevent hallucination." },
-    { q: "Is my uploaded documentation kept private?", a: "Yes. All documents are stored in dedicated, isolated Supabase clusters. Embeddings are calculated locally via Xenova transformers, and document vectors are scoped exclusively to your user ID. We never train public models on your data." },
-    { q: "What file formats are supported?", a: "We support PDF, DOCX, and DOC files. These files are parsed, formatted page-by-page, and indexed into dense chunks ready for immediate semantic search." },
-    { q: "Can I search across multiple documents at once?", a: "Absolutely. You can scope your search queries or chat conversations to a single document, a collection of documents (e.g., Engineering Docs), or your entire workspace repository." }
-  ];
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-white font-sans overflow-x-hidden selection:bg-indigo-500/30 selection:text-white">
+    <div className="min-h-screen bg-black text-slate-100 selection:bg-blue-600/30 selection:text-white font-sans antialiased overflow-x-hidden">
       
-      {/* Glow Backdrops */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-[800px] right-10 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[1000px] left-10 w-[450px] h-[450px] bg-cyan-500/5 rounded-full blur-[130px] pointer-events-none" />
-
-      {/* ── HEADER NAVBAR ────────────────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0A0A0F]/75 backdrop-blur-md border-b border-white/5 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-              <FileText className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <span className="text-base font-bold tracking-tight text-white block">DocAI</span>
-              <span className="text-[9px] font-bold text-indigo-400 tracking-widest uppercase block -mt-1">Intelligence</span>
-            </div>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-white/60">
-            <a href="#features" className="hover:text-white transition-colors">Features</a>
-            <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
-            <a href="#use-cases" className="hover:text-white transition-colors">Use Cases</a>
-            <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setAuthModal("signin")} 
-              className="text-xs font-bold text-white/75 hover:text-white transition-colors"
-            >
-              Sign In
-            </button>
-            <button 
-              onClick={() => setAuthModal("signup")}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white rounded-full text-xs font-semibold shadow-lg shadow-indigo-600/15 transition-all"
-            >
-              Start Free <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* ── HERO SECTION ─────────────────────────────────────────────────────── */}
-      <section className="pt-32 pb-20 px-6 max-w-7xl mx-auto text-center relative z-10">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-bold text-indigo-300 uppercase tracking-wider">
-            <Sparkles className="h-3 w-3 animate-spin" /> Next-Gen Knowledge Management
-          </div>
+      {/* ========================================================= */}
+      {/* 1. STICKY NAV                                              */}
+      {/* ========================================================= */}
+      <nav 
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-200 border-b ${
+          scrolled 
+            ? "bg-black/90 backdrop-blur-md border-white/[0.08] shadow-sm" 
+            : "bg-black border-white/[0.08]"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 h-20 flex items-center justify-between">
           
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.1] text-white">
-            Turn Your Documents Into <br />
-            <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              Searchable Intelligence
-            </span>
-          </h1>
+          {/* Logo */}
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-2 group">
+              <span className="font-serif italic font-bold text-2xl tracking-tight text-white group-hover:opacity-90 transition-opacity">
+                DocAI
+              </span>
+            </Link>
 
-          <p className="text-white/60 text-sm sm:text-lg max-w-3xl mx-auto leading-relaxed">
-            Upload technical documentation, research papers, company knowledge bases, product manuals, and business documents. Instantly retrieve insights, ask questions, and discover information with AI-powered semantic search and source-cited answers.
-          </p>
+            {/* Desktop Navigation Links */}
+            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+              <a href="#how-it-works" className="hover:text-white transition-colors duration-150">
+                How it works
+              </a>
+              <a href="#features" className="hover:text-white transition-colors duration-150">
+                Features
+              </a>
+              <a href="#pricing" className="hover:text-white transition-colors duration-150">
+                Pricing
+              </a>
+              
+              {/* Resources Dropdown */}
+              <div className="relative">
+                <button 
+                  onClick={() => setResourcesOpen(!resourcesOpen)}
+                  onBlur={() => setTimeout(() => setResourcesOpen(false), 200)}
+                  className="flex items-center gap-1.5 hover:text-white transition-colors duration-150 focus:outline-none"
+                >
+                  <span>Resources</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${resourcesOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-4">
+                <AnimatePresence>
+                  {resourcesOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-full left-0 mt-3 w-52 bg-black border border-white/[0.08] rounded-2xl p-2 shadow-2xl z-50"
+                    >
+                      <a href="#blog" className="block px-3.5 py-2.5 text-sm rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition-colors">
+                        Documentation & Blog
+                      </a>
+                      <a href="#testimonials" className="block px-3.5 py-2.5 text-sm rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition-colors">
+                        Customer Stories
+                      </a>
+                      <a href="#security" className="block px-3.5 py-2.5 text-sm rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition-colors">
+                        Security & Privacy
+                      </a>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+
+          {/* Nav Right CTA */}
+          <div className="hidden md:flex items-center gap-6">
             <button 
-              onClick={() => setAuthModal("signup")}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-[0.98] text-white rounded-full text-sm font-semibold shadow-lg shadow-indigo-600/20 transition-all"
+              onClick={() => openAuth("signin")}
+              className="text-sm font-medium text-slate-300 hover:text-white transition-colors duration-150"
             >
-              Start Free
+              Sign in
             </button>
             <button 
-              onClick={runSimulation}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 active:scale-[0.98] text-white rounded-full text-sm font-semibold transition-all"
+              onClick={() => openAuth("signup")}
+              className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.98]"
             >
-              <Zap className="h-4 w-4 text-indigo-400" />
-              View Demo Simulation
+              Get started
+            </button>
+          </div>
+
+          {/* Mobile Hamburger Button */}
+          <div className="md:hidden flex items-center">
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-slate-400 hover:text-white focus:outline-none"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
 
-        {/* ── LIVE INTERACTIVE MOCKUP ────────────────────────────────────────── */}
-        <div className="mt-16 max-w-5xl mx-auto rounded-2xl border border-white/10 bg-[#171F2E]/30 backdrop-blur-xl p-4 sm:p-6 shadow-2xl relative group">
-          {/* Top window dots */}
-          <div className="flex items-center gap-1.5 pb-4 border-b border-white/5 mb-4">
-            <span className="w-3 h-3 rounded-full bg-rose-500/80 inline-block" />
-            <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block" />
-            <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block" />
-            <span className="text-xs text-white/30 font-medium ml-4 font-mono select-none">AI Intelligence Sandbox</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-left font-mono">
-            {/* Sidebar flow */}
-            <div className="md:col-span-1 border-r border-white/5 pr-4 space-y-4 hidden md:block text-xs">
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-2">
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider block">Ingestion Status</span>
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-2 h-2 rounded-full ${simStep >= 1 ? 'bg-emerald-500 animate-pulse' : 'bg-white/20'}`} />
-                  <span className={simStep >= 1 ? 'text-white font-bold' : 'text-white/40'}>api_spec.pdf</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-2 h-2 rounded-full ${simStep >= 1 ? 'bg-emerald-500' : 'bg-white/20'}`} />
-                  <span className={simStep >= 1 ? 'text-white/70' : 'text-white/40'}>dev_guide.docx</span>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-2">
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider block">Retrieval Map</span>
-                {simStep >= 3 ? (
-                  <div className="space-y-1.5">
-                    {simCitations.map((c, i) => (
-                      <div key={i} className="flex items-center justify-between text-[11px] bg-indigo-500/10 p-1.5 rounded border border-indigo-500/15">
-                        <span className="text-indigo-400 font-bold truncate max-w-[100px]">{c.file} (p.{c.page})</span>
-                        <span className="text-emerald-400 font-bold">{(c.score * 100).toFixed(0)}% Match</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="text-[10px] text-white/30 italic">Awaiting semantic prompt...</span>
-                )}
-              </div>
-            </div>
-
-            {/* Simulated Chat Interface */}
-            <div className="md:col-span-2 space-y-4 flex flex-col justify-between min-h-[300px]">
-              <div className="space-y-4">
-                {/* Simulated Query */}
-                {simStep >= 2 && (
-                  <div className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white shrink-0 font-bold text-xs uppercase">
-                      U
-                    </div>
-                    <div className="bg-white/5 p-3 rounded-xl rounded-tl-none border border-white/5 max-w-[85%]">
-                      <p className="text-xs text-white leading-relaxed">{simText || " "}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Simulated Streaming Answer */}
-                {simStep >= 4 && (
-                  <div className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white shrink-0">
-                      <Sparkles className="h-4 w-4" />
-                    </div>
-                    <div className="bg-indigo-500/[0.04] border border-indigo-500/10 p-3.5 rounded-xl rounded-tl-none max-w-[90%] space-y-2">
-                      <p className="text-xs text-white/90 leading-relaxed font-sans">{simResponse || " "}</p>
-                      
-                      {simResponse.length > 50 && (
-                        <div className="pt-2 border-t border-white/5 flex flex-wrap gap-2">
-                          <span className="text-[10px] text-indigo-400 font-semibold px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/25">
-                            Citations: [api_spec.pdf, Page 12]
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Status input bar */}
-              <div className="bg-[#0A0A0F] border border-white/5 p-2 rounded-xl flex items-center gap-3">
-                <Search className="h-4 w-4 text-white/30 shrink-0" />
-                <div className="text-xs text-white/50 flex-1 truncate">
-                  {simStep === 0 && "System idle. Awaiting action..."}
-                  {simStep === 1 && "Indexing api_spec.pdf into vector store..."}
-                  {simStep === 2 && "Inputting user prompt..."}
-                  {simStep === 3 && "Running cosine similarity over embedding spaces..."}
-                  {simStep === 4 && "Streaming context-grounded response..."}
-                </div>
+        {/* Mobile Navigation Drawer */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-black border-b border-white/[0.08] px-6 py-6 space-y-4"
+            >
+              <a 
+                href="#how-it-works" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-base text-slate-300 hover:text-white"
+              >
+                How it works
+              </a>
+              <a 
+                href="#features" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-base text-slate-300 hover:text-white"
+              >
+                Features
+              </a>
+              <a 
+                href="#pricing" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-base text-slate-300 hover:text-white"
+              >
+                Pricing
+              </a>
+              <a 
+                href="#blog" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-base text-slate-300 hover:text-white"
+              >
+                Blog & Insights
+              </a>
+              <div className="pt-4 border-t border-white/[0.08] flex flex-col gap-3">
                 <button 
-                  onClick={runSimulation}
-                  disabled={isSimulating}
-                  className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-[10px] font-bold rounded"
+                  onClick={() => { setMobileMenuOpen(false); openAuth("signin"); }}
+                  className="w-full text-center py-2.5 text-sm font-medium text-slate-300 hover:text-white"
                 >
-                  {isSimulating ? "Simulating..." : "Trigger Simulation"}
+                  Sign in
+                </button>
+                <button 
+                  onClick={() => { setMobileMenuOpen(false); openAuth("signup"); }}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-3 rounded-full text-center"
+                >
+                  Get started
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
 
-      {/* ── CORE CAPABILITIES FEATURE CARD SHOWCASE ─────────────────────────── */}
-      <section id="features" className="py-24 px-6 border-t border-white/5 bg-[#171F2E]/10 relative">
-        <div className="max-w-7xl mx-auto space-y-16">
-          <div className="text-center space-y-3">
-            <h2 className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Platform Strengths</h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Enterprise Feature Showcase</h3>
-            <p className="text-white/50 text-sm max-w-2xl mx-auto">
-              Our architecture maps documents directly into semantic multi-dimensional arrays, optimizing retrieval quality.
-            </p>
-          </div>
+      {/* ========================================================= */}
+      {/* 2. HERO SECTION                                            */}
+      {/* ========================================================= */}
+      <section className="pt-36 pb-20 md:pt-44 md:pb-28 border-b border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 text-center">
+          
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-4xl mx-auto"
+          >
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white leading-[1.08] max-w-3xl mx-auto">
+              Ask questions about your documents using AI
+            </h1>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            {/* Card 1 */}
-            <div className="bg-[#171F2E]/45 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors group">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-                <Upload className="h-5 w-5" />
-              </div>
-              <h4 className="text-base font-bold text-white mb-2">Document Ingestion Pipeline</h4>
-              <p className="text-xs text-white/50 leading-relaxed">
-                Asynchronous PDF/DOCX indexing. Parses pages, splits them dynamically with overlap tokens, and uploads structures safely.
-              </p>
-            </div>
-
-            {/* Card 2 */}
-            <div className="bg-[#171F2E]/45 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors group">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-                <Search className="h-5 w-5" />
-              </div>
-              <h4 className="text-base font-bold text-white mb-2">Semantic Search</h4>
-              <p className="text-xs text-white/50 leading-relaxed">
-                Matches user queries based on conceptual meaning using sentence-transformer models instead of simple keyword queries.
-              </p>
-            </div>
-
-            {/* Card 3 */}
-            <div className="bg-[#171F2E]/45 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors group">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-                <Cpu className="h-5 w-5" />
-              </div>
-              <h4 className="text-base font-bold text-white mb-2">RAG Engine</h4>
-              <p className="text-xs text-white/50 leading-relaxed">
-                Grounds Gemini LLM context explicitly in your private documents, guaranteeing verified answers without hallucinations.
-              </p>
-            </div>
-
-            {/* Card 4 */}
-            <div className="bg-[#171F2E]/45 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors group">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-              <h4 className="text-base font-bold text-white mb-2">Source-Cited Verification</h4>
-              <p className="text-xs text-white/50 leading-relaxed">
-                Answers display click-to-view citations showing document source name and page locations to cross-reference data.
-              </p>
-            </div>
-
-            {/* Card 5 */}
-            <div className="bg-[#171F2E]/45 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors group">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-                <FileText className="h-5 w-5" />
-              </div>
-              <h4 className="text-base font-bold text-white mb-2">Multi-Document Compare</h4>
-              <p className="text-xs text-white/50 leading-relaxed">
-                Select two documents and perform side-by-side comparison, detailing changes, omissions, additions, and similarity scores.
-              </p>
-            </div>
-
-            {/* Card 6 */}
-            <div className="bg-[#171F2E]/45 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors group">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-                <BarChart3 className="h-5 w-5" />
-              </div>
-              <h4 className="text-base font-bold text-white mb-2">Workspace Quality Analytics</h4>
-              <p className="text-xs text-white/50 leading-relaxed">
-                Track search counts, vector query latencies, most referenced docs, and overall document quality intelligence indexes.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── USE CASES TABS SECTION ─────────────────────────────────────────── */}
-      <section id="use-cases" className="py-24 px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-5 space-y-6">
-            <h2 className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Target Use Cases</h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Tailored Intelligence Workflows</h3>
-            <p className="text-white/50 text-sm leading-relaxed">
-              Explore how different departments leverage DocAI to eliminate context-switching and query files with absolute trust.
+            <p className="mt-6 text-base sm:text-lg text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
+              DocAI reads your files and answers what you need to know. No more digging through pages. Just ask.
             </p>
 
-            <div className="flex flex-col gap-2">
-              {Object.entries(useCases).map(([key, data]) => {
-                const TabIcon = data.icon;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setActiveTab(key)}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-semibold border transition-all",
-                      activeTab === key 
-                        ? "bg-indigo-600/15 border-indigo-500/35 text-indigo-300" 
-                        : "bg-white/[0.01] border-white/5 text-white/60 hover:text-white hover:bg-white/[0.02]"
-                    )}
-                  >
-                    <TabIcon className="h-4 w-4" />
-                    <span>{data.title}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="lg:col-span-7 bg-[#171F2E]/40 border border-white/5 rounded-2xl p-8 backdrop-blur-md relative min-h-[300px] flex flex-col justify-between">
-            <div className="absolute top-[-20%] right-[-10%] w-56 h-56 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
-            
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-6"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 font-bold uppercase tracking-wide">
-                    {useCases[activeTab as keyof typeof useCases].tag}
-                  </span>
-                </div>
-
-                <h4 className="text-xl font-bold text-white">
-                  Optimized for {useCases[activeTab as keyof typeof useCases].title}
-                </h4>
-
-                <div className="space-y-3">
-                  {useCases[activeTab as keyof typeof useCases].bullets.map((b, i) => (
-                    <div key={i} className="flex items-start gap-2.5 text-xs text-white/70 leading-relaxed">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                      <span>{b}</span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            </AnimatePresence>
-
-            <div className="pt-8 border-t border-white/5 mt-6 flex items-center justify-between">
-              <span className="text-[10px] text-white/35 font-medium">DocAI Workspace Platform</span>
+            {/* CTA Button Pair */}
+            <div className="mt-8 flex items-center justify-center gap-4">
               <button 
-                onClick={() => setAuthModal("signup")}
-                className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 bg-transparent border-0 cursor-pointer"
+                onClick={() => openAuth("signup")}
+                className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-6 py-2.5 rounded-full transition-all duration-150 active:scale-[0.98]"
               >
-                Configure Workspace <ArrowRight className="h-3 w-3" />
+                Start
               </button>
+              <a 
+                href="#how-it-works"
+                className="border border-white/20 hover:border-white text-white font-medium text-sm px-6 py-2.5 rounded-full transition-all duration-150 active:scale-[0.98]"
+              >
+                Learn
+              </a>
             </div>
-          </div>
+          </motion.div>
+
+          {/* Full-width Hero Image with large rounded corners */}
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-14 md:mt-20 max-w-6xl mx-auto rounded-3xl border border-white/[0.08] overflow-hidden group bg-[#09090b]"
+          >
+            <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop" 
+                alt="DocAI Collaborative Intelligence Platform" 
+                className="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-700 ease-out"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+            </div>
+          </motion.div>
+
         </div>
       </section>
 
-      {/* ── SECURITY SECTION ─────────────────────────────────────────────────── */}
-      <section className="py-24 px-6 border-t border-white/5 bg-gradient-to-b from-transparent to-[#0C0C16]">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
-              <Shield className="h-6 w-6" />
-            </div>
-            <h3 className="text-3xl font-extrabold tracking-tight">Isolated Security Architecture</h3>
-            <p className="text-white/50 text-xs sm:text-sm leading-relaxed">
-              We understand company documents hold critical trade secrets and IPs. Our system is structured with zero-trust isolation boundaries.
+      {/* ========================================================= */}
+      {/* 3. THREE STEPS                                             */}
+      {/* ========================================================= */}
+      <section id="how-it-works" className="py-24 md:py-32 border-b border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center max-w-3xl mx-auto mb-16 md:mb-24"
+          >
+            <p className="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-3">
+              Simple
             </p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight">
+              Three steps to get answers from your documents
+            </h2>
+            <p className="mt-4 text-slate-400 text-sm sm:text-base">
+              The work is fast. The answers are clear. You do not need to be a technician.
+            </p>
+          </motion.div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1">
-                <Lock className="h-4 w-4 text-cyan-400 mb-1" />
-                <h5 className="text-xs font-bold text-white">Scoping Isolation</h5>
-                <p className="text-[10px] text-white/40 leading-relaxed">Document vectors are bound by strict owner constraints.</p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1">
-                <Globe className="h-4 w-4 text-purple-400 mb-1" />
-                <h5 className="text-xs font-bold text-white">Local Chunks</h5>
-                <p className="text-[10px] text-white/40 leading-relaxed">Vector indexing processes are done on isolated sandboxes.</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 z-0 pointer-events-none" />
-            <div className="p-8 space-y-4 relative z-10 font-mono text-xs">
-              <div className="flex items-center justify-between pb-3 border-b border-white/5">
-                <span className="text-[10px] text-white/40 font-bold uppercase">Security Log Audits</span>
-                <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[9px] text-emerald-400">SOC2 COMPLIANT</span>
-              </div>
-              <div className="space-y-2.5 text-[11px] text-white/60">
-                <p><span className="text-indigo-400">[INFO]</span> Initializing secure vector indexing cluster...</p>
-                <p><span className="text-indigo-400">[INFO]</span> Document tokenization running: all-MiniLM-L6-v2...</p>
-                <p><span className="text-emerald-400">[PASS]</span> Checked JWT permissions scope check (100% OK)</p>
-                <p><span className="text-indigo-400">[INFO]</span> Context matched references parsed into memory.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── PRICING SECTION ──────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-24 px-6 max-w-7xl mx-auto border-t border-white/5">
-        <div className="text-center space-y-3 mb-16">
-          <h2 className="text-xs font-bold text-indigo-400 uppercase tracking-widest">SaaS Plans</h2>
-          <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Flexible Plans For Teams</h3>
-          <p className="text-white/50 text-sm">
-            Scale your document intelligence workspace dynamically as company size expands.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Card 1 */}
-          <div className="bg-[#171F2E]/30 border border-white/5 rounded-2xl p-8 flex flex-col justify-between">
-            <div className="space-y-4">
-              <h4 className="text-lg font-bold text-white">Developer Sandbox</h4>
-              <p className="text-xs text-white/40">Ideal for personal document analysis and exploration.</p>
-              <div className="pt-2">
-                <span className="text-3xl font-extrabold text-white">$0</span>
-                <span className="text-xs text-white/40">/ forever</span>
-              </div>
-              <div className="border-t border-white/5 pt-4 space-y-2 text-xs text-white/60">
-                <p>• Max 10 Documents</p>
-                <p>• Max 20MB / file size limit</p>
-                <p>• Cosine Semantic Search</p>
-                <p>• Gemini AI Chat support</p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setAuthModal("signup")}
-              className="w-full mt-8 py-2 bg-white/5 hover:bg-white/10 text-white font-semibold rounded-lg text-xs transition-colors"
+          {/* 3-Column Step Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 max-w-6xl mx-auto">
+            
+            {/* Step 1 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="flex flex-col items-center text-center px-4"
             >
-              Start Free Sandbox
-            </button>
-          </div>
+              <div className="w-12 h-12 rounded-full border border-white/[0.08] flex items-center justify-center mb-6 text-white bg-white/[0.02]">
+                <Upload className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">
+                Upload your documents
+              </h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Drop in PDFs, Word files, or plain text. DocAI reads them all.
+              </p>
+            </motion.div>
 
-          {/* Card 2 - Featured */}
-          <div className="bg-[#171F2E]/50 border-2 border-indigo-500/50 rounded-2xl p-8 flex flex-col justify-between relative shadow-indigo-500/5 shadow-2xl">
-            <span className="absolute top-0 right-6 -translate-y-1/2 px-2.5 py-0.5 rounded-full bg-indigo-500 text-[9px] font-bold uppercase tracking-wider text-white">
-              RECOMMENDED
-            </span>
-            <div className="space-y-4">
-              <h4 className="text-lg font-bold text-white">Professional Teams</h4>
-              <p className="text-xs text-white/40">For engineering and operations teams querying core SOP files.</p>
-              <div className="pt-2">
-                <span className="text-3xl font-extrabold text-white">$15</span>
-                <span className="text-xs text-white/40">/ user / mo</span>
-              </div>
-              <div className="border-t border-white/5 pt-4 space-y-2 text-xs text-white/60">
-                <p className="text-indigo-400 font-semibold">• Everything in Free</p>
-                <p>• Unlimited Document uploads</p>
-                <p>• Max 100MB / file size limit</p>
-                <p>• Side-by-side Document Comparison</p>
-                <p>• One-click AI Actions suite</p>
-                <p>• Real-time Quality analytics</p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setAuthModal("signup")}
-              className="w-full mt-8 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg text-xs transition-all shadow-lg shadow-indigo-600/15"
+            {/* Step 2 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex flex-col items-center text-center px-4"
             >
-              Upgrade Workspace
-            </button>
+              <div className="w-12 h-12 rounded-full border border-white/[0.08] flex items-center justify-center mb-6 text-white bg-white/[0.02]">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">
+                Ask a question in plain English
+              </h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Type what you need to know. The same way you would ask a colleague.
+              </p>
+            </motion.div>
+
+            {/* Step 3 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col items-center text-center px-4"
+            >
+              <div className="w-12 h-12 rounded-full border border-white/[0.08] flex items-center justify-center mb-6 text-white bg-white/[0.02]">
+                <CornerUpRight className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">
+                Get your answer with a source
+              </h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Receive a direct reply with a citation back to the original page.
+              </p>
+            </motion.div>
+
           </div>
 
-          {/* Card 3 */}
-          <div className="bg-[#171F2E]/30 border border-white/5 rounded-2xl p-8 flex flex-col justify-between">
-            <div className="space-y-4">
-              <h4 className="text-lg font-bold text-white">Enterprise Suite</h4>
-              <p className="text-xs text-white/40">Secure workspace clusters tailored for large organizations.</p>
-              <div className="pt-2">
-                <span className="text-3xl font-extrabold text-white">Custom</span>
-              </div>
-              <div className="border-t border-white/5 pt-4 space-y-2 text-xs text-white/60">
-                <p className="text-indigo-400 font-semibold">• Everything in Professional</p>
-                <p>• SOC2 verified private clusters</p>
-                <p>• Dedicated local Vector hosting</p>
-                <p>• SSO Integration / SAML</p>
-                <p>• Custom LLM grounding prompts</p>
-                <p>• 24/7 Priority support SLA</p>
-              </div>
-            </div>
-            <a href="mailto:sales@docai.com?subject=Enterprise Inquiry" className="block w-full">
-              <button className="w-full mt-8 py-2 bg-white/5 hover:bg-white/10 text-white font-semibold rounded-lg text-xs transition-colors">
-                Contact Enterprise Sales
-              </button>
+          {/* Links Below Steps */}
+          <div className="mt-14 flex items-center justify-center gap-6">
+            <button 
+              onClick={() => openAuth("signup")}
+              className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs sm:text-sm px-5 py-2 rounded-full transition-colors"
+            >
+              Start
+            </button>
+            <a 
+              href="#features" 
+              className="text-xs sm:text-sm font-medium text-slate-300 hover:text-white flex items-center gap-1 transition-colors"
+            >
+              More <ChevronRight className="w-3.5 h-3.5" />
             </a>
           </div>
+
         </div>
       </section>
 
-      {/* ── FAQ SECTION ──────────────────────────────────────────────────────── */}
-      <section className="py-24 px-6 max-w-4xl mx-auto border-t border-white/5">
-        <div className="text-center space-y-3 mb-16">
-          <HelpCircle className="h-8 w-8 text-indigo-400 mx-auto" />
-          <h3 className="text-3xl font-extrabold tracking-tight">Frequently Asked Questions</h3>
-        </div>
+      {/* ========================================================= */}
+      {/* 4. FEATURE BLOCK 1 (Image Right)                           */}
+      {/* ========================================================= */}
+      <section id="features" className="py-24 md:py-32 border-b border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            
+            {/* Left Content */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="max-w-lg"
+            >
+              <div className="w-10 h-10 rounded-xl border border-white/[0.08] flex items-center justify-center text-white mb-8 bg-white/[0.02]">
+                <FileText className="w-5 h-5" />
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight mb-6">
+                Ask anything across all your file formats
+              </h2>
+              <p className="text-slate-400 text-base leading-relaxed mb-8">
+                DocAI handles PDF, DOCX, and TXT. It understands the context of your question and finds the right answer in the right file.
+              </p>
+              <div className="flex items-center gap-6">
+                <button 
+                  onClick={() => openAuth("signup")}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-5 py-2 rounded-full transition-colors"
+                >
+                  Try
+                </button>
+                <a 
+                  href="#multi-language" 
+                  className="text-sm font-medium text-slate-300 hover:text-white flex items-center gap-1 transition-colors"
+                >
+                  More <ChevronRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </motion.div>
 
-        <div className="space-y-4">
-          {faqs.map((faq, i) => (
-            <div key={i} className="border border-white/5 rounded-xl bg-white/[0.01] overflow-hidden">
-              <button
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="w-full flex items-center justify-between p-5 text-left text-xs sm:text-sm font-semibold text-white/80 hover:text-white"
+            {/* Right Image */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="rounded-3xl border border-white/[0.08] overflow-hidden group bg-[#09090b]"
+            >
+              <div className="relative aspect-[4/3] w-full overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1200&auto=format&fit=crop" 
+                  alt="Reviewing document formats" 
+                  className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+                />
+              </div>
+            </motion.div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 5. FEATURE BLOCK 2 (Image Left)                            */}
+      {/* ========================================================= */}
+      <section className="py-24 md:py-32 border-b border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            
+            {/* Left Image */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="order-2 lg:order-1 rounded-3xl border border-white/[0.08] overflow-hidden group bg-[#09090b]"
+            >
+              <div className="relative aspect-[4/3] w-full overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop" 
+                  alt="Verified answers and citations" 
+                  className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+                />
+              </div>
+            </motion.div>
+
+            {/* Right Content */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="order-1 lg:order-2 max-w-lg"
+            >
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight mb-6">
+                Every answer comes with proof and a score
+              </h2>
+              <p className="text-slate-400 text-base leading-relaxed mb-8">
+                DocAI shows you where the answer came from. It also gives a confidence score so you know how much to trust it.
+              </p>
+              <div className="flex items-center gap-6">
+                <button 
+                  onClick={() => openAuth("signup")}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-5 py-2 rounded-full transition-colors"
+                >
+                  Try
+                </button>
+                <a 
+                  href="#security" 
+                  className="text-sm font-medium text-slate-300 hover:text-white flex items-center gap-1 transition-colors"
+                >
+                  More <ChevronRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </motion.div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 6. FEATURE BLOCK 3 (Image Right, Secure Eyebrow)           */}
+      {/* ========================================================= */}
+      <section id="security" className="py-24 md:py-32 border-b border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            
+            {/* Left Content */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="max-w-lg"
+            >
+              <p className="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-3">
+                Secure
+              </p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight mb-6">
+                Your documents stay private and protected
+              </h2>
+              <p className="text-slate-400 text-base leading-relaxed mb-8">
+                Enterprise-grade encryption keeps your data safe. You control who can see and access every file.
+              </p>
+              <div className="flex items-center gap-6">
+                <button 
+                  onClick={() => openAuth("signup")}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-5 py-2 rounded-full transition-colors"
+                >
+                  Start
+                </button>
+                <a 
+                  href="#numbered-features" 
+                  className="text-sm font-medium text-slate-300 hover:text-white flex items-center gap-1 transition-colors"
+                >
+                  More <ChevronRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </motion.div>
+
+            {/* Right Image */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="rounded-3xl border border-white/[0.08] overflow-hidden group bg-[#09090b]"
+            >
+              <div className="relative aspect-[4/3] w-full overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1200&auto=format&fit=crop" 
+                  alt="Enterprise security and document privacy" 
+                  className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+                />
+              </div>
+            </motion.div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 7. NUMBERED FEATURE LIST (4 Stacked Rows)                  */}
+      {/* ========================================================= */}
+      <section id="numbered-features" className="border-b border-white/[0.08]">
+        
+        {/* Row 01 - Multi-language */}
+        <div id="multi-language" className="py-24 md:py-32 border-b border-white/[0.08]">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8">
+            <div className="mb-10">
+              <span className="text-xs font-semibold text-slate-400 tracking-wider">
+                01 &nbsp; Multi-language
+              </span>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="max-w-lg"
               >
-                <span>{faq.q}</span>
-                <ChevronDown className={cn("h-4 w-4 text-white/35 transition-transform", openFaq === i ? "rotate-180" : "")} />
-              </button>
-              <AnimatePresence>
-                {openFaq === i && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
+                <p className="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-3">
+                  Global
+                </p>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight mb-6">
+                  Ask questions in over twenty languages
+                </h2>
+                <p className="text-slate-400 text-base leading-relaxed mb-8">
+                  DocAI reads and answers in the language you use. Your documents can be in one tongue and your questions in another.
+                </p>
+                <div className="flex items-center gap-6">
+                  <button 
+                    onClick={() => openAuth("signup")}
+                    className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-5 py-2 rounded-full transition-colors"
                   >
-                    <div className="p-5 pt-0 border-t border-white/5 text-xs text-white/50 leading-relaxed">
-                      {faq.a}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-        </div>
-      </section>
+                    Start
+                  </button>
+                  <a 
+                    href="#row-02" 
+                    className="text-sm font-medium text-slate-300 hover:text-white flex items-center gap-1 transition-colors"
+                  >
+                    More <ChevronRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </motion.div>
 
-      {/* ── FINAL CTA BANNER ─────────────────────────────────────────────────── */}
-      <section className="py-24 px-6 max-w-7xl mx-auto text-center border-t border-white/5">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-indigo-900/40 via-purple-900/30 to-cyan-900/40 border border-white/10 p-12 sm:p-20">
-          <div className="absolute inset-0 bg-[#0A0A0F]/30 backdrop-blur-sm z-0" />
-          
-          <div className="max-w-3xl mx-auto space-y-6 relative z-10">
-            <h3 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
-              Transform Your Knowledge Base Today
-            </h3>
-            <p className="text-white/60 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
-              Configure your secure corporate document vault. Parse files, search concepts, and extract source-cited insights instantly.
-            </p>
-            <div className="pt-4">
-              <button 
-                onClick={() => setAuthModal("signup")}
-                className="flex items-center gap-1.5 px-6 py-3 bg-white text-gray-950 hover:bg-white/90 active:scale-[0.98] rounded-full text-xs font-bold shadow-lg transition-all mx-auto"
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.98 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="rounded-3xl border border-white/[0.08] overflow-hidden group bg-[#09090b]"
               >
-                Start Free Sandbox <ArrowRight className="h-4 w-4" />
-              </button>
+                <div className="relative aspect-[4/3] w-full overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1200&auto=format&fit=crop" 
+                    alt="Multilingual document search" 
+                    className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+                  />
+                </div>
+              </motion.div>
             </div>
+          </div>
+        </div>
+
+        {/* Row 02 - Summarization */}
+        <div id="row-02" className="py-24 md:py-32 border-b border-white/[0.08]">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8">
+            <div className="mb-10">
+              <span className="text-xs font-semibold text-slate-400 tracking-wider">
+                02 &nbsp; Summarization
+              </span>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="max-w-lg"
+              >
+                <p className="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-3">
+                  Fast
+                </p>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight mb-6">
+                  Get the gist of any long document
+                </h2>
+                <p className="text-slate-400 text-base leading-relaxed mb-8">
+                  DocAI condenses a hundred pages into a few clear paragraphs. You get the point without the pain.
+                </p>
+                <div className="flex items-center gap-6">
+                  <button 
+                    onClick={() => openAuth("signup")}
+                    className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-5 py-2 rounded-full transition-colors"
+                  >
+                    Start
+                  </button>
+                  <a 
+                    href="#row-03" 
+                    className="text-sm font-medium text-slate-300 hover:text-white flex items-center gap-1 transition-colors"
+                  >
+                    More <ChevronRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.98 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="rounded-3xl border border-white/[0.08] overflow-hidden group bg-[#09090b]"
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1200&auto=format&fit=crop" 
+                    alt="Fast AI document summarization" 
+                    className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+                  />
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 03 - Entity extraction */}
+        <div id="row-03" className="py-24 md:py-32 border-b border-white/[0.08]">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8">
+            <div className="mb-10">
+              <span className="text-xs font-semibold text-slate-400 tracking-wider">
+                03 &nbsp; Entity extraction
+              </span>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="max-w-lg"
+              >
+                <p className="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-3">
+                  Precise
+                </p>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight mb-6">
+                  Pull out names, dates, and key facts
+                </h2>
+                <p className="text-slate-400 text-base leading-relaxed mb-8">
+                  DocAI finds the important pieces in your files. It lists the people, places, and numbers that matter.
+                </p>
+                <div className="flex items-center gap-6">
+                  <button 
+                    onClick={() => openAuth("signup")}
+                    className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-5 py-2 rounded-full transition-colors"
+                  >
+                    Start
+                  </button>
+                  <a 
+                    href="#row-04" 
+                    className="text-sm font-medium text-slate-300 hover:text-white flex items-center gap-1 transition-colors"
+                  >
+                    More <ChevronRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.98 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="rounded-3xl border border-white/[0.08] overflow-hidden group bg-[#09090b]"
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=1200&auto=format&fit=crop" 
+                    alt="Precision fact and entity extraction" 
+                    className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+                  />
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 04 - Collaboration */}
+        <div id="row-04" className="py-24 md:py-32">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8">
+            <div className="mb-10">
+              <span className="text-xs font-semibold text-slate-400 tracking-wider">
+                04 &nbsp; Collaboration
+              </span>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="max-w-lg"
+              >
+                <p className="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-3">
+                  Shared
+                </p>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight mb-6">
+                  Work on documents with your whole team
+                </h2>
+                <p className="text-slate-400 text-base leading-relaxed mb-8">
+                  Share workspaces, organize collections, and query knowledge together in real time without conflicting versions.
+                </p>
+                <div className="flex items-center gap-6">
+                  <button 
+                    onClick={() => openAuth("signup")}
+                    className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-5 py-2 rounded-full transition-colors"
+                  >
+                    Start
+                  </button>
+                  <a 
+                    href="#benefits" 
+                    className="text-sm font-medium text-slate-300 hover:text-white flex items-center gap-1 transition-colors"
+                  >
+                    More <ChevronRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.98 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="rounded-3xl border border-white/[0.08] overflow-hidden group bg-[#09090b]"
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1200&auto=format&fit=crop" 
+                    alt="Team collaborative document intelligence" 
+                    className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+                  />
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      {/* ========================================================= */}
+      {/* 8. BENEFITS GRID (3-Column with Image Above Each)          */}
+      {/* ========================================================= */}
+      <section id="benefits" className="py-24 md:py-32 border-b border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            
+            {/* Benefit 1 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="flex flex-col"
+            >
+              <div className="rounded-2xl border border-white/[0.08] overflow-hidden mb-6 group aspect-[16/10] bg-[#09090b]">
+                <img 
+                  src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=800&auto=format&fit=crop" 
+                  alt="Save hours of manual work" 
+                  className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500"
+                />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">
+                Save hours of manual work
+              </h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Stop reading page by page. Get the answer in seconds.
+              </p>
+            </motion.div>
+
+            {/* Benefit 2 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex flex-col"
+            >
+              <div className="rounded-2xl border border-white/[0.08] overflow-hidden mb-6 group aspect-[16/10] bg-[#09090b]">
+                <img 
+                  src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=800&auto=format&fit=crop" 
+                  alt="Reduce human error" 
+                  className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500"
+                />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">
+                Reduce human error
+              </h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                The AI does not get tired or miss a line. It finds what is there.
+              </p>
+            </motion.div>
+
+            {/* Benefit 3 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col"
+            >
+              <div className="rounded-2xl border border-white/[0.08] overflow-hidden mb-6 group aspect-[16/10] bg-[#09090b]">
+                <img 
+                  src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=800&auto=format&fit=crop" 
+                  alt="Accelerate decisions" 
+                  className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500"
+                />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">
+                Accelerate decisions
+              </h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                With fast answers you can act now. Not next week.
+              </p>
+            </motion.div>
+
+          </div>
+
+          {/* Action Links */}
+          <div className="flex items-center justify-center gap-6">
+            <button 
+              onClick={() => openAuth("signup")}
+              className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs sm:text-sm px-5 py-2 rounded-full transition-colors"
+            >
+              Start
+            </button>
+            <a 
+              href="#testimonials" 
+              className="text-xs sm:text-sm font-medium text-slate-300 hover:text-white flex items-center gap-1 transition-colors"
+            >
+              More <ChevronRight className="w-3.5 h-3.5" />
+            </a>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 9. DOCUMENT-TYPE SIMPLE SECTION                            */}
+      {/* ========================================================= */}
+      <section className="py-24 md:py-32 border-b border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="max-w-lg"
+            >
+              <div className="w-10 h-10 rounded-xl border border-white/[0.08] flex items-center justify-center text-white mb-8 bg-white/[0.02]">
+                <FileText className="w-5 h-5" />
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight mb-6">
+                We make document management simple
+              </h2>
+              <p className="text-slate-400 text-base leading-relaxed mb-8">
+                From contract audits to technical manuals, DocAI indexes every page into searchable knowledge. Instant questions, guaranteed citations, zero hassle.
+              </p>
+              <div className="flex items-center gap-6">
+                <button 
+                  onClick={() => openAuth("signup")}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-5 py-2 rounded-full transition-colors"
+                >
+                  Start
+                </button>
+                <a 
+                  href="#pricing" 
+                  className="text-sm font-medium text-slate-300 hover:text-white flex items-center gap-1 transition-colors"
+                >
+                  More <ChevronRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="rounded-3xl border border-white/[0.08] overflow-hidden group bg-[#09090b]"
+            >
+              <div className="relative aspect-[4/3] w-full overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=1200&auto=format&fit=crop" 
+                  alt="Modern simple document workspace" 
+                  className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+                />
+              </div>
+            </motion.div>
+
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
-      <footer className="py-12 px-6 border-t border-white/5 text-white/30 text-xs">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-indigo-400" />
-            <span className="font-bold text-white/50">DocAI Intelligence</span>
+      {/* ========================================================= */}
+      {/* 10. TESTIMONIALS (3-Column with Logo Mark Above)           */}
+      {/* ========================================================= */}
+      <section id="testimonials" className="py-24 md:py-32 border-b border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 max-w-6xl mx-auto">
+            
+            {/* Testimonial 1 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="flex flex-col items-center text-center px-4"
+            >
+              {/* Brand Logo Mark */}
+              <div className="h-6 flex items-center justify-center font-bold tracking-wider text-sm text-slate-300 uppercase mb-8">
+                Northwind
+              </div>
+              <p className="text-base sm:text-lg font-medium text-white leading-relaxed mb-8">
+                &ldquo;DocAI cut our contract review time from three days to three hours. It is the best tool we have.&rdquo;
+              </p>
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full overflow-hidden mb-3 border border-white/10">
+                  <img 
+                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop" 
+                    alt="Sarah Chen" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h4 className="text-sm font-bold text-white">Sarah Chen</h4>
+                <p className="text-xs text-slate-400">Legal Ops, Northwind</p>
+              </div>
+            </motion.div>
+
+            {/* Testimonial 2 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex flex-col items-center text-center px-4"
+            >
+              {/* Brand Logo Mark */}
+              <div className="h-6 flex items-center justify-center font-bold tracking-wider text-sm text-slate-300 uppercase mb-8">
+                Bluepeak
+              </div>
+              <p className="text-base sm:text-lg font-medium text-white leading-relaxed mb-8">
+                &ldquo;I used to dread the quarterly reports. Now I ask a question and get the number with a source. Simple.&rdquo;
+              </p>
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full overflow-hidden mb-3 border border-white/10">
+                  <img 
+                    src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop" 
+                    alt="Mark Olsen" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h4 className="text-sm font-bold text-white">Mark Olsen</h4>
+                <p className="text-xs text-slate-400">CFO, Bluepeak</p>
+              </div>
+            </motion.div>
+
+            {/* Testimonial 3 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col items-center text-center px-4"
+            >
+              {/* Brand Logo Mark */}
+              <div className="h-6 flex items-center justify-center font-bold tracking-wider text-sm text-slate-300 uppercase mb-8">
+                Helios
+              </div>
+              <p className="text-base sm:text-lg font-medium text-white leading-relaxed mb-8">
+                &ldquo;The confidence score is a game changer. We know exactly when to trust the answer and when to double-check.&rdquo;
+              </p>
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full overflow-hidden mb-3 border border-white/10">
+                  <img 
+                    src="https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200&auto=format&fit=crop" 
+                    alt="Elena Rossi" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h4 className="text-sm font-bold text-white">Elena Rossi</h4>
+                <p className="text-xs text-slate-400">Research Lead, Helios</p>
+              </div>
+            </motion.div>
+
           </div>
-          <p>© 2026 DocAI Inc. All rights reserved. Data sandboxing verified.</p>
+
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 11. PRICING PLAN                                           */}
+      {/* ========================================================= */}
+      <section id="pricing" className="py-24 md:py-32 border-b border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center max-w-3xl mx-auto mb-16 md:mb-20"
+          >
+            <p className="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-3">
+              Pricing
+            </p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight">
+              Pricing plan
+            </h2>
+            <p className="mt-4 text-slate-400 text-sm sm:text-base">
+              Choose a plan that fits your work. Cancel anytime.
+            </p>
+          </motion.div>
+
+          {/* 3 Pricing Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            
+            {/* Basic Plan */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="rounded-3xl border border-white/[0.08] p-8 bg-black flex flex-col justify-between"
+            >
+              <div>
+                <h3 className="text-base font-medium text-white mb-4">Basic plan</h3>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">$19</span>
+                  <span className="text-slate-400 text-sm">/mo</span>
+                </div>
+                <p className="text-xs text-slate-400 mb-8">or $199 yearly</p>
+
+                <div className="space-y-3.5 text-sm text-slate-300 mb-8">
+                  <div className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Up to 100 documents</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>10 questions per day</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Standard support</span>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => openAuth("signup")}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-3 rounded-full transition-colors"
+              >
+                Get started
+              </button>
+            </motion.div>
+
+            {/* Business Plan */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="rounded-3xl border border-white/[0.08] p-8 bg-black flex flex-col justify-between"
+            >
+              <div>
+                <h3 className="text-base font-medium text-white mb-4">Business plan</h3>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">$29</span>
+                  <span className="text-slate-400 text-sm">/mo</span>
+                </div>
+                <p className="text-xs text-slate-400 mb-8">or $299 yearly</p>
+
+                <div className="space-y-3.5 text-sm text-slate-300 mb-8">
+                  <div className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Up to 1,000 documents</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Unlimited questions</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Priority support</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Team collaboration</span>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => openAuth("signup")}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-3 rounded-full transition-colors"
+              >
+                Get started
+              </button>
+            </motion.div>
+
+            {/* Enterprise Plan */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="rounded-3xl border border-white/[0.08] p-8 bg-black flex flex-col justify-between"
+            >
+              <div>
+                <h3 className="text-base font-medium text-white mb-4">Enterprise plan</h3>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">$49</span>
+                  <span className="text-slate-400 text-sm">/mo</span>
+                </div>
+                <p className="text-xs text-slate-400 mb-8">or $499 yearly</p>
+
+                <div className="space-y-3.5 text-sm text-slate-300 mb-8">
+                  <div className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Unlimited documents</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Unlimited questions</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Dedicated support</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Advanced security controls</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Custom integrations</span>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => openAuth("signup")}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-3 rounded-full transition-colors"
+              >
+                Get started
+              </button>
+            </motion.div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 12. MID-PAGE CTA                                           */}
+      {/* ========================================================= */}
+      <section className="py-24 md:py-32 border-b border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 text-center">
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="max-w-3xl mx-auto"
+          >
+            <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white leading-tight">
+              Start asking your documents...
+            </h2>
+            <p className="mt-6 text-sm sm:text-base text-slate-400 max-w-xl mx-auto leading-relaxed">
+              Try DocAI free for seven days. No credit card required. Just upload a file and ask.
+            </p>
+
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <button 
+                onClick={() => openAuth("signup")}
+                className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-6 py-2.5 rounded-full transition-all duration-150 active:scale-[0.98]"
+              >
+                Start
+              </button>
+              <a 
+                href="#how-it-works"
+                className="border border-white/20 hover:border-white text-white font-medium text-sm px-6 py-2.5 rounded-full transition-all duration-150 active:scale-[0.98]"
+              >
+                Learn
+              </a>
+            </div>
+          </motion.div>
+
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 13. BLOG / INSIGHTS                                        */}
+      {/* ========================================================= */}
+      <section id="blog" className="py-24 md:py-32 border-b border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-left max-w-3xl mb-16"
+          >
+            <p className="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-3">
+              Blog
+            </p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight">
+              Read the latest insights
+            </h2>
+            <p className="mt-3 text-slate-400 text-sm sm:text-base">
+              Practical advice on document intelligence and getting work done faster.
+            </p>
+          </motion.div>
+
+          {/* 3-Column Blog Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            
+            {/* Article 1 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="flex flex-col group cursor-pointer"
+              onClick={() => openAuth("signup")}
+            >
+              <div className="rounded-2xl border border-white/[0.08] overflow-hidden mb-6 aspect-[16/10] bg-[#09090b]">
+                <img 
+                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop" 
+                  alt="How AI reads a contract" 
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                />
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
+                <span className="font-semibold text-white px-2 py-0.5 rounded bg-white/10">AI</span>
+                <span>·</span>
+                <span>5 min read</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-4 group-hover:text-blue-400 transition-colors">
+                How AI reads a contract better than you
+              </h3>
+              <span className="text-sm font-medium text-white group-hover:text-blue-400 flex items-center gap-1 transition-colors">
+                Read more <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </motion.div>
+
+            {/* Article 2 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex flex-col group cursor-pointer"
+              onClick={() => openAuth("signup")}
+            >
+              <div className="rounded-2xl border border-white/[0.08] overflow-hidden mb-6 aspect-[16/10] bg-[#09090b]">
+                <img 
+                  src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=800&auto=format&fit=crop" 
+                  alt="Stop searching for files" 
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                />
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
+                <span className="font-semibold text-white px-2 py-0.5 rounded bg-white/10">Productivity</span>
+                <span>·</span>
+                <span>4 min read</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-4 group-hover:text-blue-400 transition-colors">
+                Stop searching for files and start asking questions
+              </h3>
+              <span className="text-sm font-medium text-white group-hover:text-blue-400 flex items-center gap-1 transition-colors">
+                Read more <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </motion.div>
+
+            {/* Article 3 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col group cursor-pointer"
+              onClick={() => openAuth("signup")}
+            >
+              <div className="rounded-2xl border border-white/[0.08] overflow-hidden mb-6 aspect-[16/10] bg-[#09090b]">
+                <img 
+                  src="https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=800&auto=format&fit=crop" 
+                  alt="Enterprise grade doc security" 
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                />
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
+                <span className="font-semibold text-white px-2 py-0.5 rounded bg-white/10">Security</span>
+                <span>·</span>
+                <span>6 min read</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-4 group-hover:text-blue-400 transition-colors">
+                Why your docs need enterprise-grade security
+              </h3>
+              <span className="text-sm font-medium text-white group-hover:text-blue-400 flex items-center gap-1 transition-colors">
+                Read more <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </motion.div>
+
+          </div>
+
+          {/* View All Button */}
+          <div className="flex justify-center">
+            <button 
+              onClick={() => openAuth("signup")}
+              className="border border-white/20 hover:border-white text-white font-medium text-sm px-6 py-2.5 rounded-full transition-all duration-150 active:scale-[0.98]"
+            >
+              View all
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 14. FOOTER                                                 */}
+      {/* ========================================================= */}
+      <footer className="py-16 md:py-24 bg-black">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-16 border-b border-white/[0.08]">
+            
+            {/* Brand column */}
+            <div className="md:col-span-3">
+              <Link href="/" className="font-serif italic font-bold text-2xl text-white">
+                DocAI
+              </Link>
+              <p className="mt-4 text-xs text-slate-400 leading-relaxed max-w-xs">
+                Minimalist AI document intelligence for modern teams. Instant answers, guaranteed citations, enterprise security.
+              </p>
+            </div>
+
+            {/* Product Column */}
+            <div className="md:col-span-2 space-y-3">
+              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Product</h4>
+              <ul className="space-y-2.5 text-sm text-slate-400">
+                <li><a href="#" className="hover:text-white transition-colors">Home</a></li>
+                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
+                <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="#blog" className="hover:text-white transition-colors">Blog</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+              </ul>
+            </div>
+
+            {/* Company Column */}
+            <div className="md:col-span-2 space-y-3">
+              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Company</h4>
+              <ul className="space-y-2.5 text-sm text-slate-400">
+                <li><a href="#" className="hover:text-white transition-colors">About</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Press</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Partners</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Support</a></li>
+              </ul>
+            </div>
+
+            {/* Resources Column */}
+            <div className="md:col-span-2 space-y-3">
+              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Resources</h4>
+              <ul className="space-y-2.5 text-sm text-slate-400">
+                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">API</a></li>
+                <li><a href="#security" className="hover:text-white transition-colors">Security</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Status</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Community</a></li>
+              </ul>
+            </div>
+
+            {/* Subscribe Column */}
+            <div className="md:col-span-3 space-y-3">
+              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Subscribe</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Join our newsletter to stay up to date on features and releases.
+              </p>
+              <form onSubmit={(e) => { e.preventDefault(); alert("Thanks for subscribing!"); }} className="flex flex-col sm:flex-row gap-2 mt-4">
+                <input 
+                  type="email" 
+                  placeholder="Enter your email" 
+                  required
+                  className="bg-white/[0.04] border border-white/10 rounded-full px-4 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-white/30 flex-1"
+                />
+                <button 
+                  type="submit"
+                  className="bg-white hover:bg-slate-200 text-black text-xs font-semibold px-4 py-2 rounded-full transition-colors whitespace-nowrap"
+                >
+                  Subscribe
+                </button>
+              </form>
+              <p className="text-[10px] text-slate-500 mt-2">
+                By subscribing you agree to our Privacy Policy and consent to receive updates.
+              </p>
+            </div>
+
+          </div>
+
+          {/* Bottom Row */}
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+            <div className="flex flex-wrap items-center gap-6">
+              <span>© 2026 DocAI. All rights reserved.</span>
+              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-white transition-colors">Cookies Settings</a>
+            </div>
+
+            {/* Social Icons */}
+            <div className="flex items-center gap-4 text-slate-400">
+              <a href="#" className="hover:text-white transition-colors" aria-label="Twitter">
+                <Twitter className="w-4 h-4" />
+              </a>
+              <a href="#" className="hover:text-white transition-colors" aria-label="Instagram">
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a href="#" className="hover:text-white transition-colors" aria-label="LinkedIn">
+                <Linkedin className="w-4 h-4" />
+              </a>
+              <a href="#" className="hover:text-white transition-colors" aria-label="YouTube">
+                <Youtube className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+
         </div>
       </footer>
 
-      {/* ── CLERK AUTH MODALS OVERLAY ────────────────────────────────────────── */}
+      {/* ========================================================= */}
+      {/* 15. CLERK AUTH MODAL                                       */}
+      {/* ========================================================= */}
       <AnimatePresence>
         {authModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0A0A0F]/80 backdrop-blur-md p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
             <div className="absolute inset-0 z-0" onClick={() => setAuthModal(null)} />
-            <div className="relative z-10 w-full max-w-[400px] bg-[#171F2E] border border-white/5 shadow-2xl rounded-3xl p-1 overflow-hidden">
+            <div className="relative z-10 w-full max-w-[400px] bg-[#0d0d11] border border-white/10 shadow-2xl rounded-3xl p-1 overflow-hidden">
               <button 
                 onClick={() => setAuthModal(null)}
-                className="absolute top-4 right-4 z-50 p-1.5 rounded-lg bg-[#0A0A0F]/45 hover:bg-[#0A0A0F]/80 text-white/60 hover:text-white transition-colors"
+                className="absolute top-4 right-4 z-50 p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                aria-label="Close modal"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -714,9 +1522,9 @@ export default function LandingPage() {
                   signUpUrl="/#signup"
                   appearance={{
                     variables: {
-                      colorPrimary: '#4f46e5',
-                      colorBackground: '#171F2E',
-                      colorInputBackground: '#0A0A0F',
+                      colorPrimary: '#2563EB',
+                      colorBackground: '#0d0d11',
+                      colorInputBackground: '#000000',
                       colorText: '#ffffff',
                       colorTextSecondary: '#9ca3af',
                       colorInputText: '#ffffff',
@@ -724,18 +1532,18 @@ export default function LandingPage() {
                     },
                     elements: {
                       card: "bg-transparent border-0 shadow-none w-full",
-                      headerTitle: "text-white font-extrabold text-xl",
+                      headerTitle: "text-white font-bold text-xl",
                       headerSubtitle: "text-white/40 text-xs",
-                      socialButtonsBlockButton: "bg-white/[0.02] border-white/5 hover:bg-white/[0.06] text-white",
-                      formButtonPrimary: "bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm py-2.5 shadow-lg shadow-indigo-600/15 transition-all duration-150 active:scale-[0.98]",
-                      formFieldInput: "bg-[#0A0A0F] border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:border-indigo-500/50",
-                      footerActionLink: "text-indigo-400 hover:text-indigo-300 font-semibold",
+                      socialButtonsBlockButton: "bg-white/[0.04] border-white/10 hover:bg-white/[0.08] text-white rounded-full",
+                      formButtonPrimary: "bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-full text-sm py-2.5 transition-all duration-150 active:scale-[0.98]",
+                      formFieldInput: "bg-black border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:border-blue-500",
+                      footerActionLink: "text-blue-400 hover:text-blue-300 font-semibold",
                       footerActionText: "text-white/40",
                       identityPreviewText: "text-white",
                       identityPreviewEditButtonIcon: "text-white/50",
                       dividerText: "text-white/30",
-                      dividerLine: "bg-white/5",
-                      formFieldLabel: "text-white/50 text-xs font-medium uppercase tracking-wider",
+                      dividerLine: "bg-white/10",
+                      formFieldLabel: "text-white/60 text-xs font-medium uppercase tracking-wider",
                       footer: "bg-transparent",
                     }
                   }}
@@ -746,9 +1554,9 @@ export default function LandingPage() {
                   signInUrl="/#signin"
                   appearance={{
                     variables: {
-                      colorPrimary: '#4f46e5',
-                      colorBackground: '#171F2E',
-                      colorInputBackground: '#0A0A0F',
+                      colorPrimary: '#2563EB',
+                      colorBackground: '#0d0d11',
+                      colorInputBackground: '#000000',
                       colorText: '#ffffff',
                       colorTextSecondary: '#9ca3af',
                       colorInputText: '#ffffff',
@@ -756,18 +1564,18 @@ export default function LandingPage() {
                     },
                     elements: {
                       card: "bg-transparent border-0 shadow-none w-full",
-                      headerTitle: "text-white font-extrabold text-xl",
+                      headerTitle: "text-white font-bold text-xl",
                       headerSubtitle: "text-white/40 text-xs",
-                      socialButtonsBlockButton: "bg-white/[0.02] border-white/5 hover:bg-white/[0.06] text-white",
-                      formButtonPrimary: "bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm py-2.5 shadow-lg shadow-indigo-600/15 transition-all duration-150 active:scale-[0.98]",
-                      formFieldInput: "bg-[#0A0A0F] border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:border-indigo-500/50",
-                      footerActionLink: "text-indigo-400 hover:text-indigo-300 font-semibold",
+                      socialButtonsBlockButton: "bg-white/[0.04] border-white/10 hover:bg-white/[0.08] text-white rounded-full",
+                      formButtonPrimary: "bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-full text-sm py-2.5 transition-all duration-150 active:scale-[0.98]",
+                      formFieldInput: "bg-black border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:border-blue-500",
+                      footerActionLink: "text-blue-400 hover:text-blue-300 font-semibold",
                       footerActionText: "text-white/40",
                       identityPreviewText: "text-white",
                       identityPreviewEditButtonIcon: "text-white/50",
                       dividerText: "text-white/30",
-                      dividerLine: "bg-white/5",
-                      formFieldLabel: "text-white/50 text-xs font-medium uppercase tracking-wider",
+                      dividerLine: "bg-white/10",
+                      formFieldLabel: "text-white/60 text-xs font-medium uppercase tracking-wider",
                       footer: "bg-transparent",
                     }
                   }}
