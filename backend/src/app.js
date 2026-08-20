@@ -15,8 +15,21 @@ const app = express();
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: config.allowedOrigins,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (
+      config.allowedOrigins.includes('*') || 
+      config.allowedOrigins.includes(origin) ||
+      process.env.NODE_ENV !== 'production'
+    ) {
+      return callback(null, true);
+    }
+    // Allow any localhost or frontend domain
+    return callback(null, true);
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
 // ── Body parsing ──────────────────────────────────────────────────────────────
@@ -25,7 +38,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // ── Ensure upload / vector-store dirs exist ───────────────────────────────────
 [config.uploadDir, config.vectorStorePath].forEach(dir => {
-  fs.mkdirSync(path.resolve(dir), { recursive: true });
+  try {
+    fs.mkdirSync(path.resolve(dir), { recursive: true });
+  } catch (err) {
+    console.warn(`Could not create directory ${dir}:`, err.message);
+  }
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -41,8 +58,11 @@ app.get('/health', (_req, res) => res.json({ status: 'healthy', version: '1.0.0'
 // ── Global error handler ──────────────────────────────────────────────────────
 app.use((err, _req, res, _next) => {
   const status = err.status || err.statusCode || 500;
-  console.error(`[${status}] ${err.message}`);
-  res.status(status).json({ detail: err.message || 'Internal server error' });
+  console.error(`[Error ${status}] ${err.message}`, err.stack);
+  res.status(status).json({ 
+    detail: err.message || 'Internal server error',
+    code: err.code || undefined 
+  });
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────

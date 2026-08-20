@@ -17,32 +17,40 @@ function formatUser(user) {
 }
 
 async function ensureDefaultWorkspaceAndCollections(userId) {
-  let workspace = await prisma.workspace.findFirst({ where: { ownerId: userId } });
-  if (!workspace) {
-    workspace = await prisma.workspace.create({
-      data: {
-        name: 'My Workspace',
-        ownerId: userId,
-      }
-    });
-
-    const defaultCollections = [
-      'Engineering Docs',
-      'Product Knowledge',
-      'Research Papers',
-      'Internal SOPs',
-      'Training Materials'
-    ];
-
-    for (const name of defaultCollections) {
-      await prisma.collection.create({
+  try {
+    let workspace = await prisma.workspace.findFirst({ where: { ownerId: userId } });
+    if (!workspace) {
+      workspace = await prisma.workspace.create({
         data: {
-          name,
-          workspaceId: workspace.id,
+          name: 'My Workspace',
+          ownerId: userId,
         }
       });
+
+      const defaultCollections = [
+        'Engineering Docs',
+        'Product Knowledge',
+        'Research Papers',
+        'Internal SOPs',
+        'Training Materials'
+      ];
+
+      for (const name of defaultCollections) {
+        try {
+          await prisma.collection.create({
+            data: {
+              name,
+              workspaceId: workspace.id,
+            }
+          });
+        } catch (colErr) {
+          console.warn(`[AuthService] Warning creating collection '${name}':`, colErr.message);
+        }
+      }
+      console.log(`[AuthService] Auto-provisioned default Workspace & Collections for user: ${userId}`);
     }
-    console.log(`[AuthService] Auto-provisioned default Workspace & 5 Collections for user: ${userId}`);
+  } catch (err) {
+    console.warn('[AuthService] Non-fatal warning auto-provisioning workspace:', err.message);
   }
 }
 
@@ -85,30 +93,35 @@ async function login({ email, password }) {
 }
 
 async function clerkSync({ email, fullName }) {
-  let user = await prisma.user.findUnique({ where: { email } });
-  
-  if (!user) {
-    const { v4: uuidv4 } = require('uuid');
-    const randomPassword = uuidv4();
-    user = await prisma.user.create({
-      data: {
-        email,
-        hashedPassword: hashPassword(randomPassword),
-        fullName: fullName || null,
-        role: 'user',
-      },
-    });
-  } else if (!user.isActive) {
-    throw httpError('Account is deactivated', 403);
+  try {
+    let user = await prisma.user.findUnique({ where: { email } });
+    
+    if (!user) {
+      const { v4: uuidv4 } = require('uuid');
+      const randomPassword = uuidv4();
+      user = await prisma.user.create({
+        data: {
+          email,
+          hashedPassword: hashPassword(randomPassword),
+          fullName: fullName || null,
+          role: 'user',
+        },
+      });
+    } else if (!user.isActive) {
+      throw httpError('Account is deactivated', 403);
+    }
+
+    await ensureDefaultWorkspaceAndCollections(user.id);
+
+    return {
+      access_token: createAccessToken(user.id, user.role),
+      token_type: 'bearer',
+      user: formatUser(user),
+    };
+  } catch (err) {
+    console.error('[AuthService] Error in clerkSync:', err);
+    throw err;
   }
-
-  await ensureDefaultWorkspaceAndCollections(user.id);
-
-  return {
-    access_token: createAccessToken(user.id, user.role),
-    token_type: 'bearer',
-    user: formatUser(user),
-  };
 }
 
 module.exports = { register, login, clerkSync, formatUser, ensureDefaultWorkspaceAndCollections };

@@ -23,10 +23,12 @@ export default function LandingPage() {
   // Auth Modal State
   const [authModal, setAuthModal] = useState<"signin" | "signup" | null>(null);
 
-  // Clerk Sync logic
+  // Clerk & Local Auth
   const { user: clerkUser, isSignedIn, isLoaded } = useUser();
   const { clerkSync } = useAuth();
-  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Ref to prevent duplicate sync loops
+  const hasSyncedRef = React.useRef(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,22 +39,21 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
-    if (isLoaded && isSignedIn && clerkUser) {
+    if (isLoaded && isSignedIn && clerkUser && !hasSyncedRef.current) {
       const email = clerkUser.primaryEmailAddress?.emailAddress;
       const fullName = clerkUser.fullName || clerkUser.username || "";
-      if (email && !isSyncing) {
-        setIsSyncing(true);
+      if (email) {
+        hasSyncedRef.current = true;
         clerkSync(email, fullName)
           .then(() => {
             window.location.href = "/dashboard";
           })
-          .catch((err) => {
+          .catch((err: any) => {
             console.error("Clerk sync failed on landing page:", err);
-            setIsSyncing(false);
           });
       }
     }
-  }, [isLoaded, isSignedIn, clerkUser, isSyncing, clerkSync]);
+  }, [isLoaded, isSignedIn, clerkUser, clerkSync]);
 
   const openAuth = (type: "signin" | "signup") => {
     if (isSignedIn) {

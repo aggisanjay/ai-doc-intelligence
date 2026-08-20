@@ -6,6 +6,7 @@ const config = {
 
   // Database
   databaseUrl: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/docai',
+  directUrl: process.env.DIRECT_URL || '',
 
   // JWT
   secretKey: process.env.SECRET_KEY || 'change-me-in-production-min-32-chars',
@@ -27,7 +28,9 @@ const config = {
   maxFileSizeMb: parseInt(process.env.MAX_FILE_SIZE_MB || '50', 10),
 
   // CORS
-  allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(','),
+  allowedOrigins: process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim()) 
+    : ['http://localhost:3000', 'https://ai-doc-intelligence-f3uf.onrender.com'],
 
   // RAG
   chunkSize: parseInt(process.env.CHUNK_SIZE || '1000', 10),
