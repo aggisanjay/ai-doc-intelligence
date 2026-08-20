@@ -23,16 +23,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-        <link rel="apple-touch-icon" href="/logo.svg" />
-      </head>
-      <body className={`${inter.variable} font-sans`}>
-        <ClerkProvider>
+    <ClerkProvider>
+      <html lang="en">
+        <head>
+          <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+          <link rel="apple-touch-icon" href="/logo.svg" />
+        </head>
+        <body className={`${inter.variable} font-sans`}>
           {children}
-        </ClerkProvider>
-      </body>
-    </html>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

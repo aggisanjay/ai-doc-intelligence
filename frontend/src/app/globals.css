@@ -41,8 +41,8 @@
     @apply border-border; 
   }
   body { 
-    @apply bg-black text-slate-100 antialiased selection:bg-blue-600/30 selection:text-white font-sans;
-    background-color: #000000;
+    @apply antialiased font-sans;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
@@ -80,3 +80,15 @@
 .hairline-border {
   border-color: rgba(255, 255, 255, 0.08);
 }
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+
