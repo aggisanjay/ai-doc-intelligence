@@ -9,6 +9,7 @@ import {
   ChevronDown, Layers, Loader2, FolderClosed, History
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/common/Logo";
 import { chatAPI, workspacesAPI } from "@/lib/api";
 import { Conversation } from "@/types";
 
@@ -133,9 +134,7 @@ export function Sidebar() {
       {/* Brand & Dynamic Workspace Switcher (Sticky Top) */}
       <div className="p-4 border-b border-white/10 shrink-0 relative bg-black z-10">
         <div className="mb-3 px-1">
-          <Link href="/" className="font-serif italic font-bold text-xl text-white tracking-tight hover:opacity-90">
-            DocAI
-          </Link>
+          <Logo href="/dashboard" />
         </div>
 
         {isLoadingWorkspaces ? (

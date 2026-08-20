@@ -10,12 +10,24 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "DocAI - AI Document Intelligence",
-  description: "Ask questions about your documents using AI",
+  description: "Cognitive AI document intelligence, semantic search, and copilot reasoning.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    apple: "/logo.svg",
+    shortcut: "/icon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+        <link rel="apple-touch-icon" href="/logo.svg" />
+      </head>
       <body className={`${inter.variable} font-sans`}>
         <ClerkProvider>
           {children}

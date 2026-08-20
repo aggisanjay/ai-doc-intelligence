@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { SignIn, SignUp, useUser } from "@clerk/nextjs";
 import { useAuth } from "@/hooks/useAuth";
+import { Logo } from "@/components/common/Logo";
 
 export default function LandingPage() {
   // Navigation & Dropdown State
@@ -78,11 +79,7 @@ export default function LandingPage() {
           
           {/* Logo */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2 group">
-              <span className="font-serif italic font-bold text-2xl tracking-tight text-white group-hover:opacity-90 transition-opacity">
-                DocAI
-              </span>
-            </Link>
+            <Logo size="lg" href="/" />
 
             {/* Desktop Navigation Links */}
             <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
@@ -1400,9 +1397,7 @@ export default function LandingPage() {
             
             {/* Brand column */}
             <div className="md:col-span-3">
-              <Link href="/" className="font-serif italic font-bold text-2xl text-white">
-                DocAI
-              </Link>
+              <Logo size="lg" href="/" />
               <p className="mt-4 text-xs text-slate-400 leading-relaxed max-w-xs">
                 Minimalist AI document intelligence for modern teams. Instant answers, guaranteed citations, enterprise security.
               </p>
