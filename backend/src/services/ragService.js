@@ -8,11 +8,16 @@ const { httpError } = require('../utils/helpers');
 // ── PostgreSQL handles JSON natively ──
 function parseConv(conv) {
   if (!conv) return null;
+  const docIds = Array.isArray(conv.documentIds) ? conv.documentIds.filter(Boolean) : [];
   return {
     ...conv,
     messages:     conv.messages || [],
-    document_ids: conv.documentIds || [],
+    document_ids: docIds,
     document_id:  conv.documentId || null,
+    document:     conv.document ? {
+      id: conv.document.id,
+      original_filename: conv.document.originalFilename || conv.document.filename,
+    } : null,
     created_at:   conv.createdAt,
     updated_at:   conv.updatedAt,
   };
@@ -142,6 +147,11 @@ async function* streamingResponse({ request, chunks, sources, chatHistory, user,
 async function getConversations(userId) {
   const convs = await prisma.conversation.findMany({
     where:   { userId },
+    include: {
+      document: {
+        select: { id: true, originalFilename: true, filename: true }
+      }
+    },
     orderBy: { updatedAt: 'desc' },
   });
   return convs.map(parseConv);
@@ -150,6 +160,11 @@ async function getConversations(userId) {
 async function getConversation(conversationId, userId) {
   const conv = await prisma.conversation.findFirst({
     where: { id: conversationId, userId },
+    include: {
+      document: {
+        select: { id: true, originalFilename: true, filename: true }
+      }
+    },
   });
   if (!conv) throw httpError('Conversation not found', 404);
   return parseConv(conv);

@@ -3,7 +3,8 @@ const { GoogleGenAI } = require('@google/genai');
 const config = require('../config');
 
 const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
-const MODEL = 'gemini-2.0-flash';
+const MODEL = config.geminiModel || 'gemini-3.6-flash';
+const GROQ_MODEL = config.groqModel || 'llama-3.1-8b-instant';
 
 const SYSTEM_PROMPT = `You are DocAI, an expert AI document intelligence assistant. Your role is to accurately, clearly, and thoroughly answer user questions based on the provided document context.
 
@@ -60,7 +61,7 @@ async function generateGroqResponse(query, chunks, history = []) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: GROQ_MODEL,
       messages: [
         { role: 'system', content: systemInstruction },
         { role: 'user', content: query }
@@ -97,7 +98,7 @@ async function* generateGroqStreamingResponse(query, chunks, history = []) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: GROQ_MODEL,
       messages: [
         { role: 'system', content: systemInstruction },
         { role: 'user', content: query }
@@ -308,7 +309,7 @@ Return ONLY valid raw JSON. Do not wrap in markdown block styling.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: GROQ_MODEL,
         messages: [
           { role: 'user', content: prompt }
         ],

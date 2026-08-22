@@ -79,20 +79,35 @@ export function ChatInterface({ initialDocumentId, initialCollectionId, conversa
         <div className="flex items-center gap-2.5 flex-wrap flex-1 min-w-0">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 shrink-0">Search Scope:</span>
           <div className="flex items-center gap-1.5 flex-wrap max-h-16 overflow-y-auto">
-            {selectedDocumentIds.length === 0 ? (
+            {selectedDocumentIds.filter(Boolean).length === 0 ? (
               <span className="px-3 py-1 bg-white/[0.04] border border-white/10 text-slate-200 rounded-full text-[11px] font-medium">
                 All Workspace Documents
               </span>
             ) : (
-              selectedDocumentIds.map((docId) => {
+              selectedDocumentIds.filter(Boolean).map((docId) => {
                 const doc = documents.find((d) => d.id === docId);
+                let displayName = doc?.original_filename;
+                
+                // Fallback: check message citations for document name
+                if (!displayName) {
+                  for (const m of messages) {
+                    if (m.sources && m.sources.length > 0) {
+                      displayName = m.sources.find((s: any) => s.document_name)?.document_name;
+                      if (displayName) break;
+                    }
+                  }
+                }
+
                 return (
-                  <span key={docId} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-950/30 border border-blue-500/30 text-blue-200 rounded-full text-[11px] font-medium truncate max-w-[180px]">
+                  <span key={docId} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-950/30 border border-blue-500/30 text-blue-200 rounded-full text-[11px] font-medium truncate max-w-[200px]">
                     <FileText className="h-3 w-3 shrink-0 text-blue-400" />
-                    <span className="truncate">{doc?.original_filename || "Unknown"}</span>
+                    <span className="truncate" title={displayName || docId}>
+                      {displayName || (documents.length === 0 ? "Loading document..." : "Scoped File")}
+                    </span>
                     <button 
                       onClick={() => toggleDocument(docId)}
                       className="text-blue-300 hover:text-white transition-colors ml-0.5"
+                      title="Remove from scope"
                     >
                       <X className="h-3 w-3 shrink-0" />
                     </button>

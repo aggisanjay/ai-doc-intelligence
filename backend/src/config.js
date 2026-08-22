@@ -12,9 +12,11 @@ const config = {
   secretKey: process.env.SECRET_KEY || 'change-me-in-production-min-32-chars',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
 
-  // Gemini
+  // Gemini & Groq
   geminiApiKey: process.env.GEMINI_API_KEY || '',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-3.6-flash',
   groqApiKey: process.env.GROQ_API_KEY || '',
+  groqModel: process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
 
   // Redis
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379/0',
