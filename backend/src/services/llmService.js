@@ -3,7 +3,7 @@ const { GoogleGenAI } = require('@google/genai');
 const config = require('../config');
 
 const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
-const MODEL = 'gemini-2.5-flash';
+const MODEL = 'gemini-2.0-flash';
 
 const SYSTEM_PROMPT = `You are DocAI, an expert AI document intelligence assistant. Your role is to accurately, clearly, and thoroughly answer user questions based on the provided document context.
 
@@ -163,6 +163,9 @@ async function generateResponse(query, chunks, history = []) {
       return { answer, tokensUsed: null };
     } catch (groqErr) {
       console.error('[LLMService] Groq fallback failed as well:', groqErr.message);
+      if (err.message?.includes('429') || err.message?.includes('quota') || groqErr.message?.includes('429')) {
+        throw new Error('AI Rate Limit Exceeded: The free tier request quota is temporarily exhausted. Please retry in 1 minute or update your API key in Settings.');
+      }
       throw err;
     }
   }
@@ -204,7 +207,11 @@ async function* generateStreamingResponse(query, chunks, history = []) {
       yield `data: ${JSON.stringify({ type: 'done' })}\n\n`;
     } catch (groqErr) {
       console.error('[LLMService] Groq streaming fallback failed:', groqErr.message);
-      yield `data: ${JSON.stringify({ type: 'error', data: `Gemini and Groq fallback both failed: ${groqErr.message}` })}\n\n`;
+      const isRateLimit = groqErr.message?.includes('429') || groqErr.message?.includes('quota');
+      const friendlyMsg = isRateLimit 
+        ? 'AI Quota / Rate Limit Exceeded: The request quota is temporarily exhausted. Please wait 1 minute before retrying, or configure your API key in Settings.'
+        : `AI Service Notice: ${groqErr.message}`;
+      yield `data: ${JSON.stringify({ type: 'error', data: friendlyMsg })}\n\n`;
     }
   }
 }

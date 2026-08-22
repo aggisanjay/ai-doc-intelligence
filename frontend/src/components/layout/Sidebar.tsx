@@ -98,6 +98,19 @@ export function Sidebar() {
     }
   };
 
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const saved = typeof window !== "undefined" ? sessionStorage.getItem("sidebar_scroll_top") : null;
+    if (saved && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = Number(saved);
+    }
+  }, [pathname]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    sessionStorage.setItem("sidebar_scroll_top", String(e.currentTarget.scrollTop));
+  };
+
   return (
     <div className="w-64 bg-black border-r border-white/10 flex flex-col h-full font-sans shrink-0 overflow-hidden">
       
@@ -167,7 +180,11 @@ export function Sidebar() {
       </div>
 
       {/* Main Unified Scrollable Middle Body */}
-      <div className="flex-1 overflow-y-auto min-h-0 space-y-4 py-3">
+      <div 
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto min-h-0 space-y-4 py-3"
+      >
         
         {/* Main Navigation */}
         <nav className="px-3 space-y-1">
@@ -178,6 +195,7 @@ export function Sidebar() {
               <Link
                 key={item.href} 
                 href={item.href}
+                scroll={false}
                 className={cn(
                   "flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-medium transition-all group relative",
                   isActive 
@@ -215,6 +233,7 @@ export function Sidebar() {
                 <Link
                   key={col.id}
                   href={`/collections/${col.id}`}
+                  scroll={false}
                   className={cn(
                     "flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors group",
                     isColActive ? "bg-white/[0.08] text-white" : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
@@ -263,7 +282,7 @@ export function Sidebar() {
                       isChatActive ? "bg-blue-600/15 text-white border border-blue-500/30" : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
                     )}
                   >
-                    <Link href={`/chat/${conv.id}`} className="flex items-center gap-2 min-w-0 flex-1 truncate">
+                    <Link href={`/chat/${conv.id}`} scroll={false} className="flex items-center gap-2 min-w-0 flex-1 truncate">
                       <MessageSquare className={cn("h-3 w-3 shrink-0", isChatActive ? "text-blue-400" : "text-slate-500")} />
                       <span className="truncate">{conv.title || "Untitled query"}</span>
                     </Link>
