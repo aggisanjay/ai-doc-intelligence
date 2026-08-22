@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Document } from "@/types";
 import { 
   FileText, Loader2, Trash2, RefreshCw, MessageSquare, 
-  CheckCircle2, AlertCircle, Clock, Search, Filter, ArrowUpRight 
+  CheckCircle2, AlertCircle, Clock, Search, Filter, ArrowUpRight, X
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
@@ -13,8 +13,10 @@ import { cn } from "@/lib/utils";
 interface DocumentListProps {
   documents: Document[];
   isLoading: boolean;
+  error?: string | null;
   onDelete: (id: string) => void;
   onReprocess: (id: string) => void;
+  onClearError?: () => void;
 }
 
 const statusConfig = {
@@ -52,9 +54,10 @@ function getDocMetadata(doc: Document) {
   return { tags, healthScore };
 }
 
-export function DocumentList({ documents, isLoading, onDelete, onReprocess }: DocumentListProps) {
+export function DocumentList({ documents, isLoading, error, onDelete, onReprocess, onClearError }: DocumentListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "completed" | "processing" | "failed">("all");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const filteredDocs = documents.filter((doc) => {
     const matchesSearch = doc.original_filename.toLowerCase().includes(searchQuery.toLowerCase());
@@ -67,6 +70,18 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
     return matchesSearch && matchesStatus;
   });
 
+  const handleDelete = async (docId: string, docName: string) => {
+    const confirmed = window.confirm(`Delete "${docName}"? This will remove the file and all its vector embeddings.`);
+    if (!confirmed) return;
+
+    setDeletingId(docId);
+    try {
+      await onDelete(docId);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (isLoading && documents.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 bg-black/40 border border-white/10 rounded-2xl">
@@ -78,6 +93,22 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
 
   return (
     <div className="space-y-4 font-sans">
+
+      {/* Error Banner */}
+      {error && (
+        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-300 text-xs font-medium">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+          {onClearError && (
+            <button onClick={onClearError} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Table Actions Header */}
       <div className="flex flex-col sm:flex-row gap-3 items-center justify-between pb-2">
         {/* Status filter tabs */}
@@ -131,14 +162,15 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
                 const { tags, healthScore } = getDocMetadata(doc);
                 const status = statusConfig[doc.status] || statusConfig.pending;
                 const StatusIcon = status.icon;
+                const isDeleting = deletingId === doc.id;
 
                 return (
-                  <tr key={doc.id} className="hover:bg-white/[0.03] transition-colors group">
+                  <tr key={doc.id} className={cn("hover:bg-white/[0.03] transition-colors group", isDeleting && "opacity-40 pointer-events-none")}>
                     {/* Name */}
                     <td className="px-5 py-4 font-medium max-w-[200px] sm:max-w-xs truncate">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl border border-white/10 bg-white/[0.04] flex items-center justify-center shrink-0 text-white group-hover:border-blue-500/40 transition-colors">
-                          <FileText className="h-4 w-4 text-blue-400" />
+                          {isDeleting ? <Loader2 className="h-4 w-4 animate-spin text-rose-400" /> : <FileText className="h-4 w-4 text-blue-400" />}
                         </div>
                         <div className="min-w-0">
                           <Link href={`/documents/${doc.id}`}>
@@ -230,11 +262,12 @@ export function DocumentList({ documents, isLoading, onDelete, onReprocess }: Do
                           </button>
                         )}
                         <button 
-                          onClick={() => onDelete(doc.id)} 
+                          onClick={() => handleDelete(doc.id, doc.original_filename)} 
                           title="Delete Document"
-                          className="p-2 text-slate-400 hover:text-rose-400 hover:bg-white/[0.08] rounded-full transition-colors"
+                          disabled={isDeleting}
+                          className="p-2 text-slate-400 hover:text-rose-400 hover:bg-white/[0.08] rounded-full transition-colors disabled:opacity-30"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                         </button>
                       </div>
                     </td>

@@ -1,8 +1,6 @@
 'use strict';
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../prismaClient');
 const { decodeAccessToken } = require('../utils/security');
-
-const prisma = new PrismaClient();
 
 async function authenticate(req, res, next) {
   try {

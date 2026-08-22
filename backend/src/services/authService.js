@@ -1,9 +1,7 @@
 'use strict';
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../prismaClient');
 const { hashPassword, verifyPassword, createAccessToken } = require('../utils/security');
 const { httpError } = require('../utils/helpers');
-
-const prisma = new PrismaClient();
 
 function formatUser(user) {
   return {

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { documentsAPI } from "@/lib/api";
+import { useDocuments } from "@/hooks/useDocuments";
 import { 
   FileText, ArrowLeftRight, Loader2, AlertTriangle, Play,
   CheckCircle2, XCircle, Info, ChevronDown, Sparkles
@@ -10,8 +11,8 @@ import {
 import Link from "next/link";
 
 export default function DocumentComparePage() {
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [isLoadingDocs, setIsLoadingDocs] = useState(true);
+  const { documents: allDocs, isLoading: isLoadingDocs } = useDocuments();
+  const documents = allDocs.filter((d: any) => d.status === "completed");
   
   // Selection
   const [docAId, setDocAId] = useState("");
@@ -21,21 +22,6 @@ export default function DocumentComparePage() {
   const [comparison, setComparison] = useState<any>(null);
   const [isComparing, setIsComparing] = useState(false);
   const [compareError, setCompareError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadDocs() {
-      try {
-        const res = await documentsAPI.list();
-        const completed = (res.data.documents || []).filter((d: any) => d.status === "completed");
-        setDocuments(completed);
-      } catch (err) {
-        console.error("Failed to load documents", err);
-      } finally {
-        setIsLoadingDocs(false);
-      }
-    }
-    loadDocs();
-  }, []);
 
   const handleRunComparison = async () => {
     if (!docAId || !docBId) return;

@@ -31,8 +31,8 @@ function buildContextString(chunks) {
   if (!chunks.length) return 'No relevant document context found.';
   return chunks.map((c, i) => {
     const { sourceFile = 'Unknown', pageNumber = 'N/A' } = c.metadata || {};
-    return `[Chunk ${i + 1}] (Source: ${sourceFile}, Page: ${pageNumber}, Relevance: ${c.score.toFixed(2)})\n${c.text}`;
-  }).join('\n---\n');
+    return `═══ [Document: ${sourceFile} | Page: ${pageNumber} | Chunk ${i + 1} | Relevance: ${c.score.toFixed(2)}] ═══\n${c.text}`;
+  }).join('\n\n');
 }
 
 function buildHistoryString(messages, max = 6) {
@@ -66,7 +66,7 @@ async function generateGroqResponse(query, chunks, history = []) {
         { role: 'user', content: query }
       ],
       temperature: 0.1,
-      max_tokens: 1500,
+      max_tokens: 4096,
     })
   });
 
@@ -103,7 +103,7 @@ async function* generateGroqStreamingResponse(query, chunks, history = []) {
         { role: 'user', content: query }
       ],
       temperature: 0.1,
-      max_tokens: 1500,
+      max_tokens: 4096,
       stream: true,
     })
   });
@@ -151,7 +151,7 @@ async function generateResponse(query, chunks, history = []) {
       config: {
         systemInstruction,
         temperature: 0.1,
-        maxOutputTokens: 1500,
+        maxOutputTokens: 4096,
       },
     });
 
@@ -181,7 +181,7 @@ async function* generateStreamingResponse(query, chunks, history = []) {
       config: {
         systemInstruction,
         temperature: 0.1,
-        maxOutputTokens: 1500,
+        maxOutputTokens: 4096,
       },
     });
 

@@ -8,7 +8,7 @@ import { useDocuments } from "@/hooks/useDocuments";
 import { FolderUp } from "lucide-react";
 
 export default function UploadPage() {
-  const { documents, isLoading, uploadDocument, deleteDocument, reprocessDocument } = useDocuments();
+  const { documents, isLoading, error, uploadDocument, deleteDocument, reprocessDocument, clearError } = useDocuments();
 
   return (
     <AppShell>
@@ -41,8 +41,10 @@ export default function UploadPage() {
           <DocumentList
             documents={documents}
             isLoading={isLoading}
+            error={error}
             onDelete={deleteDocument}
             onReprocess={reprocessDocument}
+            onClearError={clearError}
           />
         </div>
 

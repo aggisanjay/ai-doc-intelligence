@@ -109,8 +109,7 @@ router.delete('/:id', authenticate, async (req, res, next) => {
 // POST /api/v1/documents/:id/reprocess
 router.post('/:id/reprocess', authenticate, async (req, res, next) => {
   try {
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
+    const prisma = require('../prismaClient');
 
     const doc = await docService.getDocument(req.params.id, req.user.id);
     if (!['failed', 'completed'].includes(doc.status)) {

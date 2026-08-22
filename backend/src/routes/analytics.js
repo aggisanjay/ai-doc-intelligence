@@ -1,10 +1,9 @@
 'use strict';
 const { Router } = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../prismaClient');
 const { authenticate } = require('../middleware/auth');
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // GET /api/v1/analytics/dashboard
 router.get('/dashboard', authenticate, async (req, res, next) => {

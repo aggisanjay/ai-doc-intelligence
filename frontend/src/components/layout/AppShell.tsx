@@ -63,7 +63,10 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
     }
   }, [isLoaded, isSignedIn, isAuthenticated, clerkUser, router, setAuth]);
 
-  if (!isLoaded || !isAuthenticated || !isSignedIn) {
+  // Only show full-screen auth screen on first load when genuinely unauthenticated
+  const isPendingAuth = !isAuthenticated && (!isLoaded || (isSignedIn && !hasSyncedRef.current));
+
+  if (isPendingAuth) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
         <div className="flex items-center justify-center mb-4">

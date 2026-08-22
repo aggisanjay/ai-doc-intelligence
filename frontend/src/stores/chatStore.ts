@@ -6,6 +6,7 @@ interface ChatState {
   conversationId: string | null;
   selectedDocumentIds: string[];
   isLoading: boolean;
+  isLoadingHistory: boolean;
   isStreaming: boolean;
   streamingContent: string;
   addMessage: (message: ChatMessage) => void;
@@ -13,6 +14,7 @@ interface ChatState {
   setConversationId: (id: string | null) => void;
   setSelectedDocuments: (ids: string[]) => void;
   setLoading: (loading: boolean) => void;
+  setLoadingHistory: (loading: boolean) => void;
   setStreaming: (streaming: boolean) => void;
   appendStreamingContent: (content: string) => void;
   finalizeStreaming: (sources: SourceCitation[], conversationId?: string) => void;
@@ -25,6 +27,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   conversationId: null,
   selectedDocumentIds: [],
   isLoading: false,
+  isLoadingHistory: false,
   isStreaming: false,
   streamingContent: "",
 
@@ -33,6 +36,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setConversationId: (id) => set({ conversationId: id }),
   setSelectedDocuments: (ids) => set({ selectedDocumentIds: ids }),
   setLoading: (loading) => set({ isLoading: loading }),
+  setLoadingHistory: (loading) => set({ isLoadingHistory: loading }),
   setStreaming: (streaming) => set({ isStreaming: streaming }),
   appendStreamingContent: (content) => set((state) => ({ streamingContent: state.streamingContent + content })),
 
@@ -59,6 +63,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     conversationId: null,
     streamingContent: "",
     isLoading: false,
+    isLoadingHistory: false,
     isStreaming: false,
   }),
 }));

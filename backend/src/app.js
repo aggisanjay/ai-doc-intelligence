@@ -72,8 +72,7 @@ app.listen(config.port, async () => {
 
   // Clean up stuck documents from previous runs (e.g. server restarted during processing)
   try {
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
+    const prisma = require('./prismaClient');
     const result = await prisma.document.updateMany({
       where: { status: { in: ['pending', 'processing'] } },
       data: {

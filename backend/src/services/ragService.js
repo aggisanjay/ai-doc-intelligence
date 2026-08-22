@@ -1,11 +1,9 @@
 'use strict';
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../prismaClient');
 const retriever = require('../rag/retriever');
 const llmService = require('./llmService');
 const cacheService = require('./cacheService');
 const { httpError } = require('../utils/helpers');
-
-const prisma = new PrismaClient();
 
 // ── PostgreSQL handles JSON natively ──
 function parseConv(conv) {
@@ -35,26 +33,45 @@ async function getOrCreateConversation(conversationId, userId) {
   return parseConv(conv);
 }
 
+// PostgreSQL cannot store \u0000 (null bytes) in text/jsonb columns.
+// LLM responses occasionally contain these invisible characters.
+function sanitize(str) {
+  if (typeof str !== 'string') return str;
+  // eslint-disable-next-line no-control-regex
+  return str.replace(/\u0000/g, '');
+}
+
+function sanitizeDeep(obj) {
+  if (typeof obj === 'string') return sanitize(obj);
+  if (Array.isArray(obj)) return obj.map(sanitizeDeep);
+  if (obj && typeof obj === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(obj)) out[k] = sanitizeDeep(v);
+    return out;
+  }
+  return obj;
+}
+
 async function saveToConversation({ request, answer, sources, user, conversation }) {
   const now = new Date().toISOString();
-  const userMsg      = { role: 'user',      content: request.query, timestamp: now };
-  const assistantMsg = { role: 'assistant', content: answer, sources, timestamp: now };
+  const userMsg      = { role: 'user',      content: sanitize(request.query), timestamp: now };
+  const assistantMsg = { role: 'assistant', content: sanitize(answer), sources: sanitizeDeep(sources), timestamp: now };
 
   if (conversation) {
     const messages = [...(conversation.messages || []), userMsg, assistantMsg];
     const updated = await prisma.conversation.update({
       where: { id: conversation.id },
-      data:  { messages, updatedAt: new Date() },
+      data:  { messages: sanitizeDeep(messages), updatedAt: new Date() },
     });
     return updated.id;
   }
 
-  const title  = await llmService.generateConversationTitle(request.query, answer);
+  const title  = sanitize(await llmService.generateConversationTitle(request.query, answer));
   const docIds = request.documentIds || [];
   const created = await prisma.conversation.create({
     data: {
       title,
-      messages:    [userMsg, assistantMsg],
+      messages:    sanitizeDeep([userMsg, assistantMsg]),
       userId:      user.id,
       documentId:  docIds.length === 1 ? docIds[0] : null,
       documentIds: docIds,

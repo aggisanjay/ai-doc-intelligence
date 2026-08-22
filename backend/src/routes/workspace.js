@@ -1,11 +1,10 @@
 'use strict';
 const { Router } = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../prismaClient');
 const { authenticate } = require('../middleware/auth');
 const { httpError } = require('../utils/helpers');
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // ── WORKSPACE ENDPOINTS ───────────────────────────────────────────────────────
 

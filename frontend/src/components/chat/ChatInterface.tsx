@@ -5,7 +5,7 @@ import { useChat } from "@/hooks/useChat";
 import { useDocuments } from "@/hooks/useDocuments";
 import { MessageBubble } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
-import { Bot, FileText, X, Check, Sparkles, HelpCircle, Loader2 } from "lucide-react";
+import { Bot, FileText, X, Check, Sparkles, HelpCircle, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { workspacesAPI } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
@@ -19,7 +19,7 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ initialDocumentId, initialCollectionId, conversationId }: ChatInterfaceProps) {
   const { 
-    messages, isLoading, isStreaming, streamingContent, selectedDocumentIds, 
+    messages, isLoading, isLoadingHistory, isStreaming, streamingContent, selectedDocumentIds, 
     sendMessage, loadConversation, setSelectedDocuments, resetChat 
   } = useChat();
   const { documents } = useDocuments();
@@ -51,6 +51,11 @@ export function ChatInterface({ initialDocumentId, initialCollectionId, conversa
   }, [messages, streamingContent, isStreaming, isLoading]);
 
   const availableDocs = documents.filter((d) => d.status === "completed");
+
+  // Check if any selected documents are still processing or failed
+  const unprocessedSelectedDocs = selectedDocumentIds
+    .map((id) => documents.find((d) => d.id === id))
+    .filter((d) => d && d.status !== "completed");
 
   const toggleDocument = (docId: string) => {
     setSelectedDocuments(selectedDocumentIds.includes(docId)
@@ -138,12 +143,31 @@ export function ChatInterface({ initialDocumentId, initialCollectionId, conversa
         </div>
       )}
 
+      {/* Warning: unprocessed documents selected */}
+      {unprocessedSelectedDocs.length > 0 && (
+        <div className="border-b border-amber-500/20 bg-amber-500/[0.06] px-6 py-2.5 shrink-0 flex items-center gap-2.5 z-10">
+          <AlertCircle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+          <span className="text-[11px] text-amber-300 font-medium">
+            {unprocessedSelectedDocs.length} selected document{unprocessedSelectedDocs.length > 1 ? 's are' : ' is'} still processing. 
+            Answers will only use documents with "Ready" status.
+          </span>
+        </div>
+      )}
+
       {/* Chat Messages Log Panel */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-4 pb-10 min-h-0">
         <div className="max-w-4xl mx-auto space-y-4">
           
+          {/* Loading Past Conversation History State */}
+          {isLoadingHistory && (
+            <div className="flex flex-col items-center justify-center py-24 space-y-3">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+              <p className="text-xs text-slate-400 font-medium tracking-wide">Loading conversation history...</p>
+            </div>
+          )}
+
           {/* New Chat Welcome Banner */}
-          {messages.length === 0 && !isStreaming && (
+          {!isLoadingHistory && messages.length === 0 && !isStreaming && (
             <div className="flex flex-col items-center justify-center text-center py-16 space-y-4">
               <div className="w-12 h-12 rounded-2xl border border-white/10 bg-[#0c0c0e] flex items-center justify-center text-white shadow-md">
                 <Bot className="h-6 w-6 text-blue-400" />
@@ -176,7 +200,7 @@ export function ChatInterface({ initialDocumentId, initialCollectionId, conversa
           )}
 
           {/* Render individual bubbles */}
-          {messages.map((msg, idx) => (
+          {!isLoadingHistory && messages.map((msg, idx) => (
             <MessageBubble key={idx} message={msg} />
           ))}
 

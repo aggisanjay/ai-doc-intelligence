@@ -2,14 +2,12 @@
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../prismaClient');
 const { httpError, moveFile } = require('../utils/helpers');
 const textExtractor = require('../rag/textExtractor');
 const chunker = require('../rag/chunker');
 const vectorStore = require('../rag/vectorStore');
 const config = require('../config');
-
-const prisma = new PrismaClient();
 
 const ALLOWED_EXTENSIONS = new Set(['.pdf', '.docx', '.doc']);
 
@@ -162,10 +160,10 @@ async function getUserDocuments(userId) {
       processedAt: true,
     }
   });
-  return docs.map(doc => {
-    doc.filePath = resolveFilePath(doc);
-    return doc;
-  });
+  // Note: filePath resolution is deferred to getDocument() when actually needed.
+  // Resolving paths for every document during listing was causing slow load times
+  // due to synchronous fs.existsSync checks and potential file restoration from DB.
+  return docs;
 }
 
 async function getDocument(documentId, userId) {

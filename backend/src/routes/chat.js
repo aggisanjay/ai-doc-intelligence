@@ -47,9 +47,7 @@ router.post('/query/stream', authenticate, async (req, res, next) => {
 // Helper — gathers chunks/sources/history for streaming without going through the cache path
 async function prepareStreamArgs({ query, documentIds, conversationId }, user) {
   const retriever = require('../rag/retriever');
-  const llmService = require('../services/llmService');
-  const { PrismaClient } = require('@prisma/client');
-  const prisma = new PrismaClient();
+  const prisma = require('../prismaClient');
 
   const conversation = conversationId
     ? await prisma.conversation.findFirst({ where: { id: conversationId, userId: user.id } })

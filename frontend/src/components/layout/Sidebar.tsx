@@ -23,67 +23,42 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isRecentCollapsed, setIsRecentCollapsed] = useState(false);
-  
-  // Workspaces & Collections State
-  const [workspaces, setWorkspaces] = useState<any[]>([]);
-  const [activeWorkspace, setActiveWorkspace] = useState<any>(null);
-  const [collections, setCollections] = useState<any[]>([]);
   const [isWsDropdownOpen, setIsWsDropdownOpen] = useState(false);
-  const [isLoadingWorkspaces, setIsLoadingWorkspaces] = useState(true);
 
-  // Load Workspaces & Collections
+  const {
+    workspaces,
+    activeWorkspace,
+    collections,
+    conversations,
+    isLoadingWorkspaces,
+    isInitialLoaded,
+    fetchWorkspaces,
+    fetchConversations,
+    setActiveWorkspace,
+    createWorkspace,
+    createCollection,
+    deleteConversation,
+  } = useWorkspaceStore();
+
+  // Load Workspaces & Conversations on mount if not loaded
   useEffect(() => {
-    async function loadWorkspaceData() {
-      try {
-        const wsRes = await workspacesAPI.list();
-        const wsList = wsRes.data;
-        setWorkspaces(wsList);
-        
-        if (wsList.length > 0) {
-          const cachedWsId = localStorage.getItem("active_workspace_id");
-          const found = wsList.find((w: any) => w.id === cachedWsId);
-          const current = found || wsList[0];
-          setActiveWorkspace(current);
-          localStorage.setItem("active_workspace_id", current.id);
-        }
-      } catch (err) {
-        console.error("Failed to load workspaces", err);
-      } finally {
-        setIsLoadingWorkspaces(false);
-      }
+    if (!isInitialLoaded) {
+      fetchWorkspaces(false);
+      fetchConversations();
+    } else {
+      fetchWorkspaces(true); // Silent sync
+      fetchConversations();
     }
-    loadWorkspaceData();
-  }, [pathname]);
-
-  // Load Collections when active workspace changes
-  useEffect(() => {
-    if (!activeWorkspace) return;
-    async function loadCollections() {
-      try {
-        const colRes = await workspacesAPI.listCollections(activeWorkspace.id);
-        setCollections(colRes.data);
-      } catch (err) {
-        console.error("Failed to load collections", err);
-      }
-    }
-    loadCollections();
-  }, [activeWorkspace, pathname]);
-
-  // Load Recent Conversations (up to 30 items)
-  useEffect(() => {
-    chatAPI.listConversations()
-      .then((res) => setConversations(res.data.slice(0, 30)))
-      .catch(() => {});
-  }, [pathname]);
+  }, [isInitialLoaded, fetchWorkspaces, fetchConversations]);
 
   const handleSwitchWorkspace = (ws: any) => {
     setActiveWorkspace(ws);
-    localStorage.setItem("active_workspace_id", ws.id);
     setIsWsDropdownOpen(false);
   };
 
@@ -91,10 +66,7 @@ export function Sidebar() {
     const name = prompt("Enter new workspace name:");
     if (!name) return;
     try {
-      const res = await workspacesAPI.create(name);
-      const newWs = res.data;
-      setWorkspaces([...workspaces, newWs]);
-      handleSwitchWorkspace(newWs);
+      await createWorkspace(name);
     } catch (err) {
       alert("Failed to create workspace");
     }
@@ -105,8 +77,7 @@ export function Sidebar() {
     const name = prompt("Enter new collection name:");
     if (!name) return;
     try {
-      const res = await workspacesAPI.createCollection(name, activeWorkspace.id);
-      setCollections([...collections, res.data]);
+      await createCollection(name, activeWorkspace.id);
     } catch (err) {
       alert("Failed to create collection");
     }
@@ -118,8 +89,7 @@ export function Sidebar() {
     if (!confirm("Are you sure you want to delete this conversation?")) return;
 
     try {
-      await chatAPI.deleteConversation(id);
-      setConversations(conversations.filter(c => c.id !== id));
+      await deleteConversation(id);
       if (pathname === `/chat/${id}`) {
         router.push("/chat/new");
       }
