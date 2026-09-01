@@ -117,9 +117,71 @@ async function addDocuments(chunks, userId) {
   console.log(`[VectorStore] Added ${chunks.length} vectors for user ${userId}`);
 }
 
+async function autoRebuildMissingVectors(userId, documentIds = []) {
+  try {
+    const prisma = require('../prismaClient');
+    const textExtractor = require('./textExtractor');
+    const chunker = require('./chunker');
+
+    const whereClause = {
+      ownerId: userId,
+      status: 'completed',
+    };
+    if (documentIds && documentIds.length > 0) {
+      whereClause.id = { in: documentIds };
+    }
+
+    const docs = await prisma.document.findMany({ where: whereClause });
+    if (!docs.length) return;
+
+    for (const doc of docs) {
+      try {
+        let filePath = doc.filePath;
+        if (!fs.existsSync(filePath)) {
+          const localPath = path.join(path.resolve(config.uploadDir), doc.ownerId, doc.filename);
+          if (fs.existsSync(localPath)) {
+            filePath = localPath;
+          } else if (doc.fileData) {
+            fs.mkdirSync(path.dirname(localPath), { recursive: true });
+            fs.writeFileSync(localPath, doc.fileData);
+            filePath = localPath;
+          }
+        }
+
+        if (fs.existsSync(filePath)) {
+          const pages = await textExtractor.extract(filePath, doc.originalFilename);
+          if (pages.length) {
+            const chunks = chunker.chunkPages(pages, doc.id);
+            if (chunks.length) {
+              await addDocuments(chunks, userId);
+              console.log(`[VectorStore] Auto-restored ${chunks.length} vectors for document "${doc.originalFilename}" (${doc.id})`);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`[VectorStore] Could not auto-restore document ${doc.id}:`, err.message);
+      }
+    }
+  } catch (err) {
+    console.error('[VectorStore] Error in autoRebuildMissingVectors:', err.message);
+  }
+}
+
 async function search(query, userId, documentIds = [], topK = null) {
   topK = topK || config.topKRetrieval;
-  const { vectors, metadata } = loadIndex(userId);
+  let { vectors, metadata } = loadIndex(userId);
+
+  // Check if index is missing vectors for targeted documents or if empty
+  const indexedDocIds = new Set(metadata.map(m => m.documentId));
+  const hasMissingTargetDocs = documentIds.length > 0 && documentIds.some(id => !indexedDocIds.has(id));
+
+  if (!vectors.length || hasMissingTargetDocs) {
+    await autoRebuildMissingVectors(userId, documentIds);
+    const reloaded = loadIndex(userId);
+    vectors = reloaded.vectors;
+    metadata = reloaded.metadata;
+  }
+
   if (!vectors.length) return [];
 
   const [queryVec] = await generateEmbeddings([query]);
@@ -145,4 +207,4 @@ async function deleteDocumentVectors(userId, documentId) {
   console.log(`[VectorStore] Deleted vectors for document ${documentId}`);
 }
 
-module.exports = { addDocuments, search, deleteDocumentVectors, generateEmbeddings };
+module.exports = { addDocuments, search, deleteDocumentVectors, generateEmbeddings, autoRebuildMissingVectors };

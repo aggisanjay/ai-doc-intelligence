@@ -140,7 +140,12 @@ async function* streamingResponse({ request, chunks, sources, chatHistory, user,
     yield sseChunk;
   }
 
-  const conversationId = await saveToConversation({ request, answer: fullAnswer, sources, user, conversation });
+  let conversationId = null;
+  try {
+    conversationId = await saveToConversation({ request, answer: fullAnswer, sources, user, conversation });
+  } catch (saveErr) {
+    console.error('[RAGService] Failed to save conversation history in stream:', saveErr.message);
+  }
   yield `data: ${JSON.stringify({ type: 'done', conversation_id: conversationId })}\n\n`;
 }
 

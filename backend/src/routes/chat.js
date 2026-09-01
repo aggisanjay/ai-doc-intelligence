@@ -27,11 +27,13 @@ router.post('/query/stream', authenticate, async (req, res, next) => {
     const { query, document_ids: documentIds = [], conversation_id: conversationId } = req.body;
     if (!query) return res.status(400).json({ detail: 'query is required' });
 
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
-    res.flushHeaders();
+    if (typeof res.flushHeaders === 'function') {
+      res.flushHeaders();
+    }
 
     const generator = ragService.streamingResponse(
       await prepareStreamArgs({ query, documentIds, conversationId }, req.user)
@@ -39,6 +41,9 @@ router.post('/query/stream', authenticate, async (req, res, next) => {
 
     for await (const chunk of generator) {
       res.write(chunk);
+      if (typeof res.flush === 'function') {
+        res.flush();
+      }
     }
     res.end();
   } catch (err) { next(err); }
