@@ -10,6 +10,9 @@ import { Header } from "./Header";
 import { FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useDocumentStore } from "@/stores/documentStore";
+
 interface AppShellProps {
   children: React.ReactNode;
   noPadding?: boolean;
@@ -17,17 +20,19 @@ interface AppShellProps {
 
 export function AppShell({ children, noPadding = false }: AppShellProps) {
   const router = useRouter();
+  const [mounted, setMounted] = React.useState(false);
   const { isAuthenticated, loadFromStorage, setAuth } = useAuthStore();
   const { isSignedIn, isLoaded, user: clerkUser } = useUser();
   const hasSyncedRef = React.useRef(false);
 
   useEffect(() => { 
+    setMounted(true);
     loadFromStorage(); 
   }, [loadFromStorage]);
 
-  // Sync Clerk state and ensure local auth session
+  // Sync Clerk state and ensure user is provisioned in the backend database
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !mounted) return;
 
     if (!isSignedIn) {
       useAuthStore.getState().logout();
@@ -35,8 +40,7 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
       return;
     }
 
-    // If signed in to Clerk but local token is not yet initialized, sync user
-    if (isSignedIn && !isAuthenticated && !hasSyncedRef.current && clerkUser) {
+    if (isSignedIn && clerkUser && !hasSyncedRef.current) {
       hasSyncedRef.current = true;
       const email = clerkUser.primaryEmailAddress?.emailAddress || "user@docai.com";
       const fullName = clerkUser.fullName || clerkUser.username || "User";
@@ -45,23 +49,33 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
         .then((res: any) => {
           const { access_token, user: userData } = res.data;
           setAuth(userData, access_token);
+          // Refresh workspace and document stores with fresh valid token
+          useWorkspaceStore.getState().fetchWorkspaces(false);
+          useDocumentStore.getState().fetchDocuments(false);
         })
         .catch((err: any) => {
-          console.warn("Backend Clerk sync notice (using local session fallback):", err?.message);
-          // Resilient fallback: ensure user can access dashboard with local profile
-          const fallbackUser = {
-            id: clerkUser.id,
-            email,
-            full_name: fullName,
-            role: "user",
-            is_active: true,
-            created_at: new Date().toISOString(),
-          };
-          const fallbackToken = `clerk_session_${clerkUser.id}`;
-          setAuth(fallbackUser, fallbackToken);
+          console.warn("Backend Clerk sync notice:", err?.message);
         });
     }
-  }, [isLoaded, isSignedIn, isAuthenticated, clerkUser, router, setAuth]);
+  }, [isLoaded, isSignedIn, clerkUser, router, setAuth, mounted]);
+
+  // Prevent hydration mismatch: render stable container during initial SSR/hydration
+  if (!mounted) {
+    return (
+      <div className="flex h-screen bg-black text-slate-100 font-sans overflow-hidden">
+        <div className="w-64 bg-black border-r border-white/10 shrink-0 hidden md:block" />
+        <div className="flex-1 flex flex-col overflow-hidden relative bg-black">
+          <div className="h-16 border-b border-white/10 shrink-0" />
+          <main className={cn("flex-1 relative z-10 bg-black", noPadding ? "overflow-hidden flex flex-col h-full" : "overflow-auto p-6 md:p-8")}>
+            <div className="animate-pulse space-y-4 max-w-4xl mx-auto py-8">
+              <div className="h-8 bg-white/5 rounded-2xl w-48" />
+              <div className="h-32 bg-white/5 rounded-3xl w-full" />
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   // Only show full-screen auth screen on first load when genuinely unauthenticated
   const isPendingAuth = !isAuthenticated && (!isLoaded || (isSignedIn && !hasSyncedRef.current));
