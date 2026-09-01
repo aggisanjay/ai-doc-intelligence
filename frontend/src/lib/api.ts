@@ -89,23 +89,41 @@ export const chatAPI = {
       body: JSON.stringify(data),
     });
 
-    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    if (!response.ok) {
+      let errDetail = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errJson = await response.json();
+        if (errJson?.detail) errDetail = errJson.detail;
+      } catch {}
+      throw new Error(errDetail);
+    }
 
     const reader = response.body?.getReader();
     const decoder = new TextDecoder();
     if (!reader) return;
 
+    let buffer = "";
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      for (const line of chunk.split("\n")) {
-        if (line.startsWith("data: ")) {
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      // Keep the trailing un-terminated segment in the buffer
+      buffer = lines.pop() || "";
+      for (const line of lines) {
+        const clean = line.trim();
+        if (clean.startsWith("data: ")) {
           try {
-            yield JSON.parse(line.substring(6));
+            yield JSON.parse(clean.substring(6));
           } catch {}
         }
       }
+    }
+    // Flush remaining buffer if any
+    if (buffer.trim().startsWith("data: ")) {
+      try {
+        yield JSON.parse(buffer.trim().substring(6));
+      } catch {}
     }
   },
 
