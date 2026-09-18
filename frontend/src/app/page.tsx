@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   FileText, ArrowRight, Check, Shield, Search, ChevronDown, Plus, 
-  X, Menu, Sun, Moon, Cpu, GitCompare, BarChart3, Lock, CheckCircle2
+  X, Menu, Sun, Moon, Cpu, Layers, BarChart3, Lock, CheckCircle2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SignUpButton, SignInButton, useUser } from "@clerk/nextjs";
@@ -25,7 +25,6 @@ export default function LandingPage() {
   // ── Navigation & UI State ─────────────────────────────
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
   // ── Auth state ──
   const { isSignedIn, isLoaded } = useUser();
@@ -123,12 +122,12 @@ export default function LandingPage() {
       a: "Yes. All documents are isolated with JWT-scoped permissions and owner-bound vector stores. Your data is strictly encrypted in transit and at rest, and is never used to train public foundation models."
     },
     {
-      q: "Can I compare multiple document versions?",
-      a: "Yes. DocAI features side-by-side semantic document comparison, allowing you to highlight differences, analyze contractual discrepancies, and detect missing clauses instantly."
+      q: "Can I query multiple documents at once?",
+      a: "Yes. You can chat across your entire document library or focus your inquiries on specific files or collections to cross-reference multiple sources seamlessly."
     },
     {
-      q: "How do team workspaces and collections work?",
-      a: "You can organize documents into categorized collections (e.g. Legal, Engineering, Product) and collaborate with granular access controls across your team."
+      q: "How do document collections work?",
+      a: "Collections allow you to group related documents together (such as legal files, financial reports, or technical specs) for targeted querying, organized browsing, and focused AI chat."
     }
   ];
 
@@ -174,9 +173,9 @@ export default function LandingPage() {
 
           {/* Center Links (Desktop) */}
           <div className="hidden md:flex items-center gap-7 text-xs sm:text-sm font-medium" style={{ color: isDark ? "#cbd5e1" : "#64748b" }}>
-            <a href="#method" className="hover:text-[#E8503A] transition-colors">Method</a>
-            <a href="#capabilities" className="hover:text-[#E8503A] transition-colors">Capabilities</a>
-            <a href="#pricing" className="hover:text-[#E8503A] transition-colors">Pricing</a>
+            <a href="#method" className="hover:text-[#E8503A] transition-colors">How it works</a>
+            <a href="#features" className="hover:text-[#E8503A] transition-colors">Features</a>
+            <a href="#privacy" className="hover:text-[#E8503A] transition-colors">Privacy</a>
             <a href="#faq" className="hover:text-[#E8503A] transition-colors">FAQ</a>
           </div>
 
@@ -241,9 +240,9 @@ export default function LandingPage() {
             }}
           >
             <div className="flex flex-col gap-4 text-sm font-medium">
-              <a href="#method" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-[#E8503A]">Method</a>
-              <a href="#capabilities" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-[#E8503A]">Capabilities</a>
-              <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-[#E8503A]">Pricing</a>
+              <a href="#method" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-[#E8503A]">How it works</a>
+              <a href="#features" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-[#E8503A]">Features</a>
+              <a href="#privacy" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-[#E8503A]">Privacy</a>
               <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-[#E8503A]">FAQ</a>
               <div className="pt-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}` }}>
                 <AuthSignIn>
@@ -337,14 +336,14 @@ export default function LandingPage() {
           <motion.a
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
-            href="#capabilities"
+            href="#features"
             className="text-sm sm:text-base font-medium px-8 py-3.5 rounded-full transition-all border cursor-pointer inline-block"
             style={{
               borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)",
               color: isDark ? "#fff" : "#19171A",
             }}
           >
-            See how it works
+            Explore features
           </motion.a>
         </motion.div>
 
@@ -507,9 +506,10 @@ export default function LandingPage() {
       </section>
 
       {/* ========================================================= */}
-      {/* 5. CAPABILITIES BENTO GRID                                */}
       {/* ========================================================= */}
-      <section id="capabilities" className="py-24 sm:py-32 px-6 sm:px-8 max-w-6xl mx-auto">
+      {/* 5. FEATURES BENTO GRID                                    */}
+      {/* ========================================================= */}
+      <section id="features" className="py-24 sm:py-32 px-6 sm:px-8 max-w-6xl mx-auto">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -518,19 +518,19 @@ export default function LandingPage() {
           className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6"
         >
           <div>
-            <p className="font-serif italic text-lg mb-3" style={{ color: "#E8503A" }}>Capabilities</p>
+            <p className="font-serif italic text-lg mb-3" style={{ color: "#E8503A" }}>Features</p>
             <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight" style={{ color: isDark ? "#fff" : "#19171A" }}>
-              Built for real work.
+              Built for real document intelligence.
             </h2>
           </div>
           <p className="text-sm sm:text-base max-w-sm leading-relaxed" style={{ color: isDark ? "#cbd5e1" : "#64748b" }}>
-            Everything you need to turn a pile of files into a trustworthy answer engine.
+            Everything you need to turn raw files into structured, verifiable knowledge.
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           {[
-            { span: "md:col-span-7", title: "Semantic search", desc: "Find ideas by meaning across the whole workspace, not brittle keyword matches.", icon: <Search className="w-5 h-5" />, big: true },
+            { span: "md:col-span-7", title: "Semantic vector search", desc: "Find ideas and context by meaning across your whole workspace, not brittle keyword matches.", icon: <Search className="w-5 h-5" />, big: true },
           ].map((card) => (
             <motion.div
               key={card.title}
@@ -560,8 +560,8 @@ export default function LandingPage() {
           {/* Right Column Stack */}
           <div className="md:col-span-5 flex flex-col gap-6">
             {[
-              { title: "RAG engine", desc: "Answers grounded in your private docs — verifiable, never invented.", icon: <Cpu className="w-4 h-4" /> },
-              { title: "Source-cited", desc: "Every claim links back to its document and page.", icon: <Shield className="w-4 h-4" /> },
+              { title: "Grounded RAG chat", desc: "Answers synthesized strictly from your private documents — verifiable, never invented.", icon: <Cpu className="w-4 h-4" /> },
+              { title: "Source-cited answers", desc: "Every answer links directly to its source document with exact page and section references.", icon: <Shield className="w-4 h-4" /> },
             ].map((card, idx) => (
               <motion.div
                 key={card.title}
@@ -591,8 +591,8 @@ export default function LandingPage() {
 
           {/* Bottom Row */}
           {[
-            { span: "md:col-span-5", title: "Compare docs", desc: "Diff two files side-by-side for changes, gaps and overlap.", icon: <GitCompare className="w-4 h-4" /> },
-            { span: "md:col-span-7", title: "Quality analytics", desc: "Track query latency, top references and workspace health.", icon: <BarChart3 className="w-4 h-4" /> },
+            { span: "md:col-span-6", title: "Organized collections", desc: "Group related files into custom collections for focused research and project-level queries.", icon: <Layers className="w-4 h-4" /> },
+            { span: "md:col-span-6", title: "Workspace analytics", desc: "Track query volume, document index statistics, and system activity in real time.", icon: <BarChart3 className="w-4 h-4" /> },
           ].map((card, idx) => (
             <motion.div
               key={card.title}
@@ -624,7 +624,7 @@ export default function LandingPage() {
       {/* ========================================================= */}
       {/* 6. PRIVATE BY DESIGN                                      */}
       {/* ========================================================= */}
-      <section className="py-24 sm:py-32 px-6 sm:px-8 max-w-6xl mx-auto">
+      <section id="privacy" className="py-24 sm:py-32 px-6 sm:px-8 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
           <motion.div 
             initial={{ opacity: 0, x: -30 }}
@@ -712,217 +712,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========================================================= */}
-      {/* 7. PRICING SECTION                                        */}
-      {/* ========================================================= */}
-      <section id="pricing" className="py-24 sm:py-32 px-6 sm:px-8 max-w-6xl mx-auto">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12 space-y-3"
-        >
-          <p className="font-serif italic text-lg" style={{ color: "#E8503A" }}>Pricing</p>
-          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight" style={{ color: isDark ? "#fff" : "#19171A" }}>
-            Scales with your team.
-          </h2>
-          <p className="text-xs sm:text-sm max-w-md mx-auto" style={{ color: isDark ? "#94a3b8" : "#64748b" }}>
-            Predictable, transparent pricing. Upgrade or cancel anytime.
-          </p>
 
-          {/* Billing Cycle Toggle */}
-          <div
-            className="inline-flex items-center p-1 rounded-full border mt-4"
-            style={{
-              borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
-              backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-            }}
-          >
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              type="button"
-              onClick={() => setBillingCycle("monthly")}
-              className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer"
-              style={{
-                backgroundColor: billingCycle === "monthly" ? "#E8503A" : "transparent",
-                color: billingCycle === "monthly" ? "#fff" : (isDark ? "#94a3b8" : "#64748b"),
-                boxShadow: billingCycle === "monthly" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-              }}
-            >
-              Monthly billing
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              type="button"
-              onClick={() => setBillingCycle("yearly")}
-              className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1"
-              style={{
-                backgroundColor: billingCycle === "yearly" ? "#E8503A" : "transparent",
-                color: billingCycle === "yearly" ? "#fff" : (isDark ? "#94a3b8" : "#64748b"),
-                boxShadow: billingCycle === "yearly" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-              }}
-            >
-              <span>Annual billing</span>
-              <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-bold">20% off</span>
-            </motion.button>
-          </div>
-        </motion.div>
-
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-          
-          {/* Sandbox */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            whileHover={{ y: -6 }}
-            transition={{ duration: 0.3 }}
-            className="rounded-3xl p-8 border flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-xl"
-            style={{
-              backgroundColor: isDark ? "#141218" : "#FFFFFF",
-              borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
-              color: isDark ? "#fff" : "#19171A",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(232,80,58,0.5)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"; }}
-          >
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-bold tracking-tight mb-2">Sandbox</h3>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-4xl font-extrabold">$0</span>
-                  <span className="text-xs" style={{ color: "#94a3b8" }}>/ forever</span>
-                </div>
-              </div>
-              <ul className="space-y-3 text-xs sm:text-sm">
-                {["10 documents", "20MB / file", "Semantic search", "Grounded AI chat"].map((f) => (
-                  <li key={f} className="flex items-center gap-2.5">
-                    <Check className="w-4 h-4 shrink-0" style={{ color: "#E8503A" }} />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <AuthCTA signedInText="Open Dashboard">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="button"
-                className="w-full py-3 rounded-full text-xs font-semibold mt-8 border transition-all cursor-pointer"
-                style={{
-                  borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)",
-                  color: isDark ? "#fff" : "#19171A",
-                }}
-              >
-                Get started free
-              </motion.button>
-            </AuthCTA>
-          </motion.div>
-
-          {/* Teams (Popular) */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            whileHover={{ y: -6 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-            className="rounded-3xl p-8 relative flex flex-col justify-between shadow-xl transition-all duration-300"
-            style={{
-              backgroundColor: isDark ? "#18151E" : "#FFFFFF",
-              border: "2px solid #E8503A",
-              color: isDark ? "#fff" : "#19171A",
-            }}
-          >
-            <div className="absolute -top-3.5 right-6">
-              <span className="bg-[#E8503A] text-white text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
-                POPULAR
-              </span>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-bold tracking-tight mb-2">Teams</h3>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-4xl font-extrabold" style={{ color: "#E8503A" }}>
-                    {billingCycle === "yearly" ? "$12" : "$15"}
-                  </span>
-                  <span className="text-xs" style={{ color: "#94a3b8" }}>/ user / mo</span>
-                </div>
-              </div>
-              <ul className="space-y-3 text-xs sm:text-sm">
-                {["Everything in Sandbox", "Unlimited workspaces", "100MB / file", "Document comparison", "Priority parsing & indexing"].map((f) => (
-                  <li key={f} className="flex items-center gap-2.5">
-                    <Check className="w-4 h-4 shrink-0" style={{ color: "#E8503A" }} />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <AuthCTA signedInText="Open Dashboard">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="button"
-                className="w-full py-3 rounded-full text-xs font-semibold mt-8 bg-[#E8503A] hover:bg-[#D3402B] text-white transition-all shadow-md cursor-pointer"
-              >
-                Upgrade workspace
-              </motion.button>
-            </AuthCTA>
-          </motion.div>
-
-          {/* Enterprise */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            whileHover={{ y: -6 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-            className="rounded-3xl p-8 border flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-xl"
-            style={{
-              backgroundColor: isDark ? "#141218" : "#FFFFFF",
-              borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
-              color: isDark ? "#fff" : "#19171A",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(232,80,58,0.5)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"; }}
-          >
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-bold tracking-tight mb-2">Enterprise</h3>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl sm:text-4xl font-extrabold">Custom</span>
-                  <span className="text-xs" style={{ color: "#94a3b8" }}>/ talk to us</span>
-                </div>
-              </div>
-              <ul className="space-y-3 text-xs sm:text-sm">
-                {["Everything in Teams", "Private vector clusters", "SSO / SAML enforcement", "Custom grounding models", "24/7 dedicated support SLA"].map((f) => (
-                  <li key={f} className="flex items-center gap-2.5">
-                    <Check className="w-4 h-4 shrink-0" style={{ color: "#E8503A" }} />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <AuthCTA signedInText="Open Dashboard">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="button"
-                className="w-full py-3 rounded-full text-xs font-semibold mt-8 border transition-all cursor-pointer"
-                style={{
-                  borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)",
-                  color: isDark ? "#fff" : "#19171A",
-                }}
-              >
-                Contact sales →
-              </motion.button>
-            </AuthCTA>
-          </motion.div>
-
-        </div>
-      </section>
 
       {/* ========================================================= */}
       {/* 8. FAQ ACCORDION SECTION                                  */}
@@ -1016,7 +806,7 @@ export default function LandingPage() {
       </section>
 
       {/* ========================================================= */}
-      {/* 9. FINAL CTA SECTION                                      */}
+      {/* 8. FINAL CTA SECTION                                      */}
       {/* ========================================================= */}
       <section className="py-24 sm:py-32 px-6 sm:px-8 max-w-5xl mx-auto text-left">
         <motion.div
@@ -1031,10 +821,10 @@ export default function LandingPage() {
             style={{ color: isDark ? "#fff" : "#19171A" }}
           >
             Transform your <br />
-            knowledge base today.
+            documents today.
           </h2>
           <p className="text-base sm:text-lg max-w-2xl leading-relaxed mb-10" style={{ color: isDark ? "#cbd5e1" : "#64748b" }}>
-            Spin up a secure workspace, upload your files, and start asking. Source-cited answers in seconds.
+            Upload your files, explore instant semantic search, and get verifiable, source-cited answers in seconds.
           </p>
           <div>
             <AuthCTA signedInText="Go to Dashboard">
@@ -1044,7 +834,7 @@ export default function LandingPage() {
                 type="button"
                 className="bg-[#E8503A] hover:bg-[#D3402B] text-white text-sm sm:text-base font-semibold px-8 py-4 rounded-full transition-all shadow-lg flex items-center gap-2 cursor-pointer"
               >
-                <span>Start free sandbox</span>
+                <span>Get started free</span>
                 <ArrowRight className="w-4 h-4" />
               </motion.button>
             </AuthCTA>
