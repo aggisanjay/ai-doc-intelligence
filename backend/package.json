@@ -1,11 +1,11 @@
 {
   "name": "ai-doc-intelligence-backend",
   "version": "1.0.0",
-  "description": "RAG-powered document Q&A backend — Node.js/Express",
+  "description": "RAG-powered document Q&A backend \u2014 Node.js/Express",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js",
+    "start": "node api.js && node src/app.js",
+    "dev": "node api.js && nodemon src/app.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:push": "prisma db push"
